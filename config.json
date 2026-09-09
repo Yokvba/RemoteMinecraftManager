@@ -1,11 +1,11 @@
 {
   "discord": {
-    "clientId": "YourBotUserID",
-    "guildId": "YourServerID",
-    "token": "YourBotToken"
+    "clientId": "796742583765827634",
+    "guildId": "411970284443140097",
+    "token": "Nzk2NzQyNTgzNzY1ODI3NjM0.GJBQNc.3qBInxgOqVNtSe7dBw3bWptWz-E_tH5y2JIsHM"
   },
   "permissions": {
-    "allowedUserId": "YourOwnUserID"
+    "allowedUserId": "758444849212555296"
   },
   "socket": {
     "host": "0.0.0.0",
@@ -17,12 +17,13 @@
     "webUrl": "https://example.com"
   },
   "web": {
-    "host": "localhost",
-    "port": 3000,
+    "host": "0.0.0.0",
+    "port": 8080,
+    "refreshIntervalMs": 1500,
     "users": [
       {
-        "username": "admin",
-        "password": "admin"
+        "username": "root",
+        "password": "jaro1234"
       }
     ]
   },
