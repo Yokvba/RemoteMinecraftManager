@@ -37,6 +37,33 @@ h1, h2 {
   display: none !important;
 }
 
+.site-footer {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.site-footer nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.site-footer a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: #4ade80;
+  text-decoration: underline;
+}
+
 .login-box,
 .status-box {
   background: rgba(255, 255, 255, 0.03);
