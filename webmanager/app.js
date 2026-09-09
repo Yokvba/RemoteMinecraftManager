@@ -45,8 +45,9 @@ const settingsBtn = document.getElementById('settingsBtn'),
   cancelSettingsBtn = document.getElementById('cancelSettingsBtn'),
   settingsForm = document.getElementById('settingsForm');
 
-const LIVE_REFRESH_MS = 1500;
+const DEFAULT_REFRESH_INTERVAL_MS = 1500;
 let lastStatusData = null;
+let refreshTimer = null;
 
 function setStatus(online) {
   statusText.textContent = online ? 'Minecraft is online' : 'Minecraft is offline';
@@ -119,7 +120,7 @@ function renderServerStatusSummary(statusData = {}) {
 
   const networkDown = Number(hostStatus.networkDownMbps) || 0;
   const networkUp = Number(hostStatus.networkUpMbps) || 0;
-  const networkMax = Math.max(networkDown, networkUp, 1);
+  const networkMax = Number(hostStatus.networkCapacityMbps) || Math.max(networkDown, networkUp, 1);
   serverNetworkDownBar.style.width = `${Math.min(100, (networkDown / networkMax) * 100)}%`;
   serverNetworkUpBar.style.width = `${Math.min(100, (networkUp / networkMax) * 100)}%`;
 
@@ -181,6 +182,7 @@ async function loadSettings() {
     document.getElementById('minecraftWebUrl').value = config.minecraft?.webUrl || '';
     document.getElementById('webHost').value = config.web?.host || '';
     document.getElementById('webPort').value = config.web?.port || '';
+    document.getElementById('refreshIntervalMs').value = config.web?.refreshIntervalMs || DEFAULT_REFRESH_INTERVAL_MS;
   } catch (error) {
     console.error('Failed to load settings:', error);
     alert('Failed to load settings.');
@@ -194,6 +196,24 @@ function openSettings() {
 
 function closeSettings() {
   settingsModal.classList.add('hidden');
+}
+
+function setRefreshRate(intervalMs) {
+  const safeIntervalMs = Math.max(100, Number(intervalMs) || DEFAULT_REFRESH_INTERVAL_MS);
+
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+  }
+
+  refreshTimer = setInterval(() => {
+    if (!appView.classList.contains('hidden')) {
+      refreshLiveData();
+
+      if (!serverPage.classList.contains('hidden')) {
+        refreshServerConsole();
+      }
+    }
+  }, safeIntervalMs);
 }
 
 document.addEventListener('click', (event) => {
@@ -239,6 +259,7 @@ settingsForm.addEventListener('submit', async (event) => {
   try {
     const result = await fetchJson('/api/config', { method: 'POST', body: JSON.stringify(updates) });
     if (!result.success) throw new Error(result.message || 'Unknown error');
+    setRefreshRate(updates.web?.refreshIntervalMs);
     alert('Settings saved successfully!');
     closeSettings();
   } catch (error) {
@@ -294,9 +315,4 @@ consoleForm.addEventListener('submit', async (event) => {
 
 checkSession();
 showPage('minecraft');
-setInterval(() => {
-  if (!appView.classList.contains('hidden')) {
-    refreshLiveData();
-    if (!serverPage.classList.contains('hidden')) refreshServerConsole();
-  }
-}, LIVE_REFRESH_MS);
+setRefreshRate(DEFAULT_REFRESH_INTERVAL_MS);

@@ -13,6 +13,7 @@ const { screenName, serverPath } = minecraftConfig;
 const { host: targetHost, port: targetPort } = config.socket || {};
 const { forbiddenCommands = [] } = config;
 let lastNetworkSnapshot = null;
+let networkCapacityMbps = null;
 
 export function outputText(stdout, stderr) {
   return (stdout || '').trim() || (stderr || '').trim() || 'Command completed successfully.';
@@ -143,6 +144,59 @@ export async function getRawNetworkStats() {
   return { downBytes: 0, upBytes: 0 };
 }
 
+function parseLinkSpeed(value) {
+  const match = String(value).match(/([\d.]+)\s*(Gbps|Mbps|Kbps)/i);
+  if (!match) return 0;
+
+  const amount = Number(match[1]);
+  const unit = match[2].toLowerCase();
+  const multiplier = unit === 'gbps' ? 1000 : unit === 'kbps' ? 0.001 : 1;
+  return Number.isFinite(amount) ? amount * multiplier : 0;
+}
+
+async function getNetworkCapacity() {
+  if (networkCapacityMbps !== null) return networkCapacityMbps;
+
+  try {
+    const platform = os.platform();
+
+    if (platform === 'linux') {
+      const interfaces = await fs.readdir('/sys/class/net');
+      const speeds = await Promise.all(
+        interfaces
+          .filter((iface) => iface !== 'lo')
+          .map(async (iface) => {
+            try {
+              const state = (await fs.readFile(`/sys/class/net/${iface}/operstate`, 'utf8')).trim();
+              if (state !== 'up') return 0;
+
+              const speed = Number((await fs.readFile(`/sys/class/net/${iface}/speed`, 'utf8')).trim());
+              return Number.isFinite(speed) && speed > 0 ? speed : 0;
+            } catch {
+              return 0;
+            }
+          })
+      );
+
+      networkCapacityMbps = Math.max(...speeds, 0);
+    } else if (platform === 'win32') {
+      const { stdout } = await execAsync(
+        'powershell -NoProfile -Command "Get-NetAdapter -Physical | Where-Object Status -eq \'Up\' | Select-Object -ExpandProperty LinkSpeed"'
+      );
+      networkCapacityMbps = Math.max(
+        ...stdout.split(/\r?\n/).map((line) => parseLinkSpeed(line)),
+        0
+      );
+    } else {
+      networkCapacityMbps = 0;
+    }
+  } catch {
+    networkCapacityMbps = 0;
+  }
+
+  return networkCapacityMbps;
+}
+
 export async function getNetworkUsage() {
   const current = await getRawNetworkStats();
 
@@ -228,6 +282,7 @@ export async function getHostStatus() {
     const cpu = await getCpuUsage();
     const ram = getRamUsage();
     const network = await getNetworkUsage();
+    const networkCapacity = await getNetworkCapacity();
     const disk = await getDiskUsage();
     const uptime = getUptime();
 
@@ -247,6 +302,7 @@ export async function getHostStatus() {
       networkUp: formatNetworkRate(network.up),
       networkDownMbps: network.down,
       networkUpMbps: network.up,
+      networkCapacityMbps: networkCapacity,
     };
   } catch {
     return {
@@ -265,6 +321,7 @@ export async function getHostStatus() {
       networkUp: 'N/A',
       networkDownMbps: 0,
       networkUpMbps: 0,
+      networkCapacityMbps: 0,
     };
   }
 }
