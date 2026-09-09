@@ -1,11 +1,11 @@
 {
   "discord": {
-    "clientId": "796742583765827634",
-    "guildId": "411970284443140097",
-    "token": "Nzk2NzQyNTgzNzY1ODI3NjM0.GJBQNc.3qBInxgOqVNtSe7dBw3bWptWz-E_tH5y2JIsHM"
+    "clientId": "YourBotUserID",
+    "guildId": "YourServerID",
+    "token": "YourBotToken"
   },
   "permissions": {
-    "allowedUserId": "758444849212555296"
+    "allowedUserId": "YourOwnUserID"
   },
   "socket": {
     "host": "0.0.0.0",
@@ -13,7 +13,7 @@
   },
   "minecraft": {
     "screenName": "mcserver",
-    "serverPath": "/home/jaro/mcserver/",
+    "serverPath": "/home/user/mcserver/",
     "webUrl": "https://example.com"
   },
   "web": {
@@ -22,8 +22,8 @@
     "refreshIntervalMs": 1500,
     "users": [
       {
-        "username": "root",
-        "password": "jaro1234"
+        "username": "admin",
+        "password": "admin"
       }
     ]
   },
