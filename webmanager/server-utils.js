@@ -30,12 +30,16 @@ export function wait(milliseconds) {
 export function tcpPing(host, port) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
-    const socket = net.connect(port, host, () => {
+    const connectHost = host === '0.0.0.0' || host === '::' ? '127.0.0.1' : host;
+    const socket = net.connect({ host: connectHost, port, timeout: 3000 }, () => {
       const ping = Date.now() - start;
       socket.destroy();
       resolve(ping);
     });
 
+    socket.on('timeout', () => {
+      socket.destroy(new Error(`Timed out connecting to ${host}:${port}`));
+    });
     socket.on('error', reject);
   });
 }
@@ -239,6 +243,10 @@ export async function getHostStatus() {
       diskPercent: disk.diskPercent,
       uptime: uptime,
       network: `↓ ${formatNetworkRate(network.down)} / ↑ ${formatNetworkRate(network.up)}`,
+      networkDown: formatNetworkRate(network.down),
+      networkUp: formatNetworkRate(network.up),
+      networkDownMbps: network.down,
+      networkUpMbps: network.up,
     };
   } catch {
     return {
@@ -253,6 +261,10 @@ export async function getHostStatus() {
       diskPercent: 0,
       uptime: getUptime(),
       network: 'N/A',
+      networkDown: 'N/A',
+      networkUp: 'N/A',
+      networkDownMbps: 0,
+      networkUpMbps: 0,
     };
   }
 }

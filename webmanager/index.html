@@ -109,20 +109,39 @@
               <div class="stat-value" id="serverCpuValue">N/A</div>
             </div>
             <div class="stat-card">
-              <div class="stat-label"><span aria-hidden="true">🧠</span> RAM</div>
+              <div class="stat-label"><span aria-hidden="true">💾</span> RAM</div>
               <div class="stat-value" id="serverRamValue">N/A</div>
             </div>
-            <div class="stat-card stat-card-wide">
-              <div class="stat-label"><span aria-hidden="true">⏱️</span> Uptime</div>
-              <div class="stat-value" id="serverUptimeValue">N/A</div>
-            </div>
-            <div class="stat-card stat-card-wide">
+            <div class="stat-card">
               <div class="stat-label"><span aria-hidden="true">📊</span> Disk Usage</div>
               <div class="stat-value usage-value" id="serverDiskPercent">0%</div>
               <div id="serverDiskInfo" style="font-size: 0.85rem; color: #9ca3af; margin-top: 4px;">0 GB / 0 GB</div>
               <div class="usage-bar">
                 <span id="serverDiskBar" style="width: 0%"></span>
               </div>
+            </div>
+            <div class="stat-card network-card">
+              <div class="stat-label"><span aria-hidden="true">🌐</span> Network</div>
+              <div class="network-graph" aria-label="Network upload and download rates">
+                <div class="network-rate">
+                  <div class="network-rate-header">
+                    <span>↓ Downlink</span>
+                    <strong id="serverNetworkDownValue">N/A</strong>
+                  </div>
+                  <div class="network-bar"><span id="serverNetworkDownBar"></span></div>
+                </div>
+                <div class="network-rate">
+                  <div class="network-rate-header">
+                    <span>↑ Uplink</span>
+                    <strong id="serverNetworkUpValue">N/A</strong>
+                  </div>
+                  <div class="network-bar network-bar-up"><span id="serverNetworkUpBar"></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="stat-card stat-card-wide">
+              <div class="stat-label"><span aria-hidden="true">⏱️</span> Uptime</div>
+              <div class="stat-value" id="serverUptimeValue">N/A</div>
             </div>
           </div>
         </div>
@@ -138,6 +157,8 @@
             <form id="settingsForm">
               <fieldset>
                 <legend>Socket Configuration</legend>
+                <legend style="color: white; font-size: 0.7rem;">Please restart application after changing any setting to apply changes.</legend>
+                <br>
                 <div class="form-group">
                   <label for="socketHost">Host:</label>
                   <input type="text" id="socketHost" name="socket.host" required />
@@ -210,6 +231,10 @@
       const serverDiskBar = document.getElementById('serverDiskBar');
       const serverDiskInfo = document.getElementById('serverDiskInfo');
       const serverUptimeValue = document.getElementById('serverUptimeValue');
+      const serverNetworkDownValue = document.getElementById('serverNetworkDownValue');
+      const serverNetworkUpValue = document.getElementById('serverNetworkUpValue');
+      const serverNetworkDownBar = document.getElementById('serverNetworkDownBar');
+      const serverNetworkUpBar = document.getElementById('serverNetworkUpBar');
       const outputEl = document.getElementById('output');
       const serverOutputEl = document.getElementById('serverOutput');
       const serverCommandForm = document.getElementById('serverCommandForm');
@@ -319,6 +344,14 @@
         serverCpuValue.textContent = hostStatus.cpu || 'N/A';
         serverRamValue.textContent = hostStatus.ram || 'N/A';
         serverUptimeValue.textContent = hostStatus.uptime || 'N/A';
+        serverNetworkDownValue.textContent = hostStatus.networkDown || 'N/A';
+        serverNetworkUpValue.textContent = hostStatus.networkUp || 'N/A';
+
+        const networkDown = Number(hostStatus.networkDownMbps) || 0;
+        const networkUp = Number(hostStatus.networkUpMbps) || 0;
+        const networkMax = Math.max(networkDown, networkUp, 1);
+        serverNetworkDownBar.style.width = `${Math.min(100, (networkDown / networkMax) * 100)}%`;
+        serverNetworkUpBar.style.width = `${Math.min(100, (networkUp / networkMax) * 100)}%`;
 
         const percent = Number(hostStatus.diskPercent ?? 0);
         const safePercent = Number.isFinite(percent) ? Math.min(100, Math.max(0, percent)) : 0;
