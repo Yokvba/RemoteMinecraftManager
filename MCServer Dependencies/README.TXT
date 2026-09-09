@@ -11,5 +11,5 @@ screen -x mcserver
 > Use CTRL + C to kill the server.
 > The Server will automatically restart after 5 seconds, if not wanted press CTRL + C again.
 
-You can allocated Ram, and Server.jar File in the startserver.sh. Do not change anything else.
+You can allocate Min/Max Ram, and Server.jar File in the startserver.sh. Do not change anything else.
 Only change the start.sh if really know what to.
