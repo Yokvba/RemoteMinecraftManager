@@ -208,51 +208,55 @@
     </div>
 
     <script>
-      const loginView = document.getElementById('loginView');
-      const appView = document.getElementById('appView');
-      const loginForm = document.getElementById('loginForm');
-      const loginError = document.getElementById('loginError');
-      const logoutBtn = document.getElementById('logoutBtn');
-      const menuToggle = document.getElementById('menuToggle');
-      const menu = document.getElementById('menu');
-      const minecraftPageBtn = document.getElementById('minecraftPageBtn');
-      const serverPageBtn = document.getElementById('serverPageBtn');
-      const minecraftPage = document.getElementById('minecraftPage');
-      const serverPage = document.getElementById('serverPage');
-      const statusText = document.getElementById('statusText');
-      const statusDot = document.getElementById('statusDot');
-      const serverStatusText = document.getElementById('serverStatusText');
-      const serverStatusDot = document.getElementById('serverStatusDot');
-      const serverStatusValue = document.getElementById('serverStatusValue');
-      const serverPingValue = document.getElementById('serverPingValue');
-      const serverCpuValue = document.getElementById('serverCpuValue');
-      const serverRamValue = document.getElementById('serverRamValue');
-      const serverDiskPercent = document.getElementById('serverDiskPercent');
-      const serverDiskBar = document.getElementById('serverDiskBar');
-      const serverDiskInfo = document.getElementById('serverDiskInfo');
-      const serverUptimeValue = document.getElementById('serverUptimeValue');
-      const serverNetworkDownValue = document.getElementById('serverNetworkDownValue');
-      const serverNetworkUpValue = document.getElementById('serverNetworkUpValue');
-      const serverNetworkDownBar = document.getElementById('serverNetworkDownBar');
-      const serverNetworkUpBar = document.getElementById('serverNetworkUpBar');
-      const outputEl = document.getElementById('output');
-      const serverOutputEl = document.getElementById('serverOutput');
-      const serverCommandForm = document.getElementById('serverCommandForm');
-      const serverCommandInput = document.getElementById('serverCommandInput');
-      const startBtn = document.getElementById('startBtn');
-      const stopBtn = document.getElementById('stopBtn');
-      const logsBtn = document.getElementById('logsBtn');
-      const consoleForm = document.getElementById('consoleForm');
-      const consoleInput = document.getElementById('consoleInput');
-      const usernameInput = document.getElementById('usernameInput');
-      const passwordInput = document.getElementById('passwordInput');
-      const settingsBtn = document.getElementById('settingsBtn');
-      const settingsModal = document.getElementById('settingsModal');
-      const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-      const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
-      const settingsForm = document.getElementById('settingsForm');
+      const loginView = document.getElementById('loginView'),
+        appView = document.getElementById('appView'),
+        loginForm = document.getElementById('loginForm'),
+        loginError = document.getElementById('loginError'),
+        logoutBtn = document.getElementById('logoutBtn'),
+        menuToggle = document.getElementById('menuToggle'),
+        menu = document.getElementById('menu'),
+        minecraftPageBtn = document.getElementById('minecraftPageBtn'),
+        serverPageBtn = document.getElementById('serverPageBtn'),
+        minecraftPage = document.getElementById('minecraftPage'),
+        serverPage = document.getElementById('serverPage');
 
-      const LIVE_REFRESH_MS = 1500;      let lastStatusData = null;
+      const statusText = document.getElementById('statusText'),
+        statusDot = document.getElementById('statusDot'),
+        serverStatusText = document.getElementById('serverStatusText'),
+        serverStatusDot = document.getElementById('serverStatusDot'),
+        serverStatusValue = document.getElementById('serverStatusValue'),
+        serverPingValue = document.getElementById('serverPingValue'),
+        serverCpuValue = document.getElementById('serverCpuValue'),
+        serverRamValue = document.getElementById('serverRamValue'),
+        serverDiskPercent = document.getElementById('serverDiskPercent'),
+        serverDiskBar = document.getElementById('serverDiskBar'),
+        serverDiskInfo = document.getElementById('serverDiskInfo'),
+        serverUptimeValue = document.getElementById('serverUptimeValue'),
+        serverNetworkDownValue = document.getElementById('serverNetworkDownValue'),
+        serverNetworkUpValue = document.getElementById('serverNetworkUpValue'),
+        serverNetworkDownBar = document.getElementById('serverNetworkDownBar'),
+        serverNetworkUpBar = document.getElementById('serverNetworkUpBar');
+
+      const outputEl = document.getElementById('output'),
+        serverOutputEl = document.getElementById('serverOutput'),
+        serverCommandForm = document.getElementById('serverCommandForm'),
+        serverCommandInput = document.getElementById('serverCommandInput'),
+        startBtn = document.getElementById('startBtn'),
+        stopBtn = document.getElementById('stopBtn'),
+        logsBtn = document.getElementById('logsBtn'),
+        consoleForm = document.getElementById('consoleForm'),
+        consoleInput = document.getElementById('consoleInput'),
+        usernameInput = document.getElementById('usernameInput'),
+        passwordInput = document.getElementById('passwordInput');
+
+      const settingsBtn = document.getElementById('settingsBtn'),
+        settingsModal = document.getElementById('settingsModal'),
+        closeSettingsBtn = document.getElementById('closeSettingsBtn'),
+        cancelSettingsBtn = document.getElementById('cancelSettingsBtn'),
+        settingsForm = document.getElementById('settingsForm');
+
+      const LIVE_REFRESH_MS = 1500;
+      let lastStatusData = null;
       function setStatus(online) {
         statusText.textContent = online ? 'Minecraft is online' : 'Minecraft is offline';
         statusText.style.color = online ? '#86efac' : '#fca5a5';
