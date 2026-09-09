@@ -63,7 +63,7 @@ async function serveStaticFile(req, res, relativePath) {
   }
 
   const extension = path.extname(filePath).toLowerCase();
-  if (extension === '.js') {
+  if (extension === '.js' && path.basename(filePath) !== 'app.js') {
     sendJson(res, 403, { success: false, message: 'Direct asset access is not allowed.' });
     return;
   }
@@ -89,7 +89,7 @@ export async function handleRequest(req, res) {
   }
 
   if (req.method === 'GET' && pathname === '/app.js') {
-    sendJson(res, 403, { success: false, message: 'Direct asset access is not allowed.' });
+    await serveStaticFile(req, res, '/app.js');
     return;
   }
 
