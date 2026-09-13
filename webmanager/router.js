@@ -195,6 +195,41 @@ export async function handleRequest(req, res) {
     return;
   }
 
+  if (req.method === 'GET' && pathname === '/api/files') {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
+    try {
+      const rootPath = path.resolve(minecraftConfig.serverPath || '.');
+      const entries = await fs.readdir(rootPath, { withFileTypes: true });
+      const files = await Promise.all(entries.map(async (entry) => {
+        const entryPath = path.join(rootPath, entry.name);
+        const stats = await fs.stat(entryPath);
+
+        return {
+          name: entry.name,
+          type: entry.isDirectory() ? 'directory' : 'file',
+          size: entry.isDirectory() ? 0 : stats.size,
+          modifiedAt: stats.mtime.toISOString(),
+        };
+      }));
+
+      files.sort((left, right) => {
+        if (left.type !== right.type) return left.type === 'directory' ? -1 : 1;
+        return left.name.localeCompare(right.name);
+      });
+
+      sendJson(res, 200, {
+        success: true,
+        path: rootPath,
+        entries: files,
+      });
+    } catch (error) {
+      sendJson(res, 400, { success: false, message: `Unable to read configured server path: ${error.message}` });
+    }
+    return;
+  }
+
   if (req.method === 'POST' && pathname === '/api/run') {
     const user = requireAuth(req, res);
     if (!user) return;

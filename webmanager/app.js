@@ -7,13 +7,13 @@ const loginView = document.getElementById('loginView'),
   menu = document.getElementById('menu'),
   minecraftPageBtn = document.getElementById('minecraftPageBtn'),
   serverPageBtn = document.getElementById('serverPageBtn'),
+  fileManagerPageBtn = document.getElementById('fileManagerPageBtn'),
   minecraftPage = document.getElementById('minecraftPage'),
-  serverPage = document.getElementById('serverPage');
+  serverPage = document.getElementById('serverPage'),
+  fileManagerPage = document.getElementById('fileManagerPage');
 
 const statusText = document.getElementById('statusText'),
   statusDot = document.getElementById('statusDot'),
-  serverStatusText = document.getElementById('serverStatusText'),
-  serverStatusDot = document.getElementById('serverStatusDot'),
   serverStatusValue = document.getElementById('serverStatusValue'),
   serverPingValue = document.getElementById('serverPingValue'),
   serverCpuValue = document.getElementById('serverCpuValue'),
@@ -43,7 +43,11 @@ const settingsBtn = document.getElementById('settingsBtn'),
   settingsModal = document.getElementById('settingsModal'),
   closeSettingsBtn = document.getElementById('closeSettingsBtn'),
   cancelSettingsBtn = document.getElementById('cancelSettingsBtn'),
-  settingsForm = document.getElementById('settingsForm');
+  settingsForm = document.getElementById('settingsForm'),
+  refreshFilesBtn = document.getElementById('refreshFilesBtn'),
+  fileManagerPath = document.getElementById('fileManagerPath'),
+  fileManagerError = document.getElementById('fileManagerError'),
+  fileList = document.getElementById('fileList');
 
 const DEFAULT_REFRESH_INTERVAL_MS = 1500;
 let lastStatusData = null;
@@ -56,15 +60,15 @@ function setStatus(online) {
   statusDot.style.boxShadow = online ? '0 0 10px rgba(34, 197, 94, 0.8)' : '0 0 10px rgba(239, 68, 68, 0.8)';
 }
 
-function setServerStatus(online) {
-  serverStatusText.textContent = online ? 'Server is online' : 'Server is offline';
-  serverStatusText.style.color = online ? '#86efac' : '#fca5a5';
-  serverStatusDot.style.background = online ? '#22c55e' : '#ef4444';
-  serverStatusDot.style.boxShadow = online ? '0 0 10px rgba(34, 197, 94, 0.8)' : '0 0 10px rgba(239, 68, 68, 0.8)';
-}
-
 function setOutput(value) {
+  const wasAtBottom = outputEl.scrollHeight - outputEl.scrollTop - outputEl.clientHeight < 24;
   outputEl.textContent = value || 'No output returned.';
+
+  if (wasAtBottom) {
+    requestAnimationFrame(() => {
+      outputEl.scrollTop = outputEl.scrollHeight;
+    });
+  }
 }
 
 function setServerOutput(value) {
@@ -72,9 +76,59 @@ function setServerOutput(value) {
 }
 
 function showPage(pageName) {
-  const pageMap = { minecraft: minecraftPage, server: serverPage };
+  const pageMap = { minecraft: minecraftPage, server: serverPage, files: fileManagerPage };
   Object.entries(pageMap).forEach(([name, page]) => page.classList.toggle('hidden', name !== pageName));
   menu.classList.remove('open');
+
+  if (pageName === 'minecraft') {
+    requestAnimationFrame(() => {
+      outputEl.scrollTop = outputEl.scrollHeight;
+    });
+  }
+
+  if (pageName === 'files') loadFiles();
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+  return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+}
+
+function renderFiles(entries) {
+  fileList.replaceChildren();
+
+  if (!entries.length) {
+    fileList.innerHTML = '<div class="file-list-empty">No files found.</div>';
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const row = document.createElement('div');
+    row.className = 'file-row';
+    row.innerHTML = `
+      <span class="file-name"><span aria-hidden="true">${entry.type === 'directory' ? '📁' : '📄'}</span>${entry.name}</span>
+      <span class="file-type">${entry.type === 'directory' ? 'Directory' : formatFileSize(entry.size)}</span>
+      <span class="file-date">${new Date(entry.modifiedAt).toLocaleString()}</span>`;
+    fileList.appendChild(row);
+  });
+}
+
+async function loadFiles() {
+  fileManagerError.classList.add('hidden');
+  fileList.innerHTML = '<div class="file-list-empty">Loading files...</div>';
+
+  try {
+    const data = await fetchJson('/api/files');
+    fileManagerPath.textContent = data.path;
+    renderFiles(data.entries);
+  } catch (error) {
+    fileManagerPath.textContent = 'Configured server path unavailable';
+    fileManagerError.textContent = error.message;
+    fileManagerError.classList.remove('hidden');
+    fileList.replaceChildren();
+  }
 }
 
 function setAuthenticated(user) {
@@ -136,15 +190,12 @@ async function refreshLiveData() {
   try {
     const [statusData, logData] = await Promise.all([fetchJson('/api/status'), fetchJson('/api/logs')]);
     lastStatusData = statusData;
-    const minecraftOnline = Boolean(statusData.online || statusData.hostOnline || statusData.hostStatus?.online);
-    const serverOnline = Boolean(statusData.hostOnline || statusData.hostStatus?.online || statusData.online);
+    const minecraftOnline = Boolean(statusData.hostStatus?.online);
     setStatus(minecraftOnline);
-    setServerStatus(serverOnline);
     renderServerStatusSummary(statusData);
     if (!minecraftPage.classList.contains('hidden')) setOutput(logData.output || 'No output returned.');
   } catch (error) {
     setStatus(false);
-    setServerStatus(false);
     renderServerStatusSummary({ online: false, hostStatus: {} });
     if (!minecraftPage.classList.contains('hidden')) setOutput(`Live update failed.\n${error.message}`);
   }
@@ -152,7 +203,6 @@ async function refreshLiveData() {
 
 function refreshServerConsole() {
   if (lastStatusData) {
-    setServerStatus(lastStatusData.online);
     renderServerStatusSummary(lastStatusData);
   }
 }
@@ -242,6 +292,8 @@ logoutBtn.addEventListener('click', async () => {
 menuToggle.addEventListener('click', toggleMenu);
 minecraftPageBtn.addEventListener('click', () => showPage('minecraft'));
 serverPageBtn.addEventListener('click', () => showPage('server'));
+fileManagerPageBtn.addEventListener('click', () => showPage('files'));
+refreshFilesBtn.addEventListener('click', loadFiles);
 settingsBtn.addEventListener('click', openSettings);
 closeSettingsBtn.addEventListener('click', closeSettings);
 cancelSettingsBtn.addEventListener('click', closeSettings);

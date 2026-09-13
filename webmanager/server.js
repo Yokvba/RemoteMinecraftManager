@@ -49,10 +49,10 @@ async function getLatestLogs() {
     await wait(100);
 
     const log = await fs.readFile(logFile, 'utf8');
-    const lines = log.trimEnd().split(/\r?\n/).slice(-20).join('\n');
+    const lines = log.trimEnd().split(/\r?\n/).slice(-100).join('\n');
     return lines || 'No log output returned.';
   } catch (error) {
-    return error.message || 'Unable to read the server log.';
+    return 'Minecraft server unavailable';
   } finally {
     await fs.rm(logFile, { force: true }).catch(() => {});
   }

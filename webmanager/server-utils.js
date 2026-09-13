@@ -276,54 +276,47 @@ export async function getDiskUsage() {
 
 export async function getHostStatus() {
   const socket = targetHost && targetPort ? `${targetHost}:${targetPort}` : 'N/A';
+  let ping = 'N/A';
+  let online = false;
 
   try {
-    const ping = await tcpPing(targetHost, targetPort);
-    const cpu = await getCpuUsage();
-    const ram = getRamUsage();
-    const network = await getNetworkUsage();
-    const networkCapacity = await getNetworkCapacity();
-    const disk = await getDiskUsage();
-    const uptime = getUptime();
+    ping = `${await tcpPing(targetHost, targetPort)}ms`;
+    online = true;
+  } catch {}
 
-    return {
-      socket,
-      online: true,
-      status: 'Online',
-      ping: `${ping}ms`,
-      cpu: `${cpu}%`,
-      ram: `${ram.usedGb} GB / ${ram.totalGb} GB`,
-      diskUsed: disk.diskUsed,
-      diskTotal: disk.diskTotal,
-      diskPercent: disk.diskPercent,
-      uptime: uptime,
-      network: `↓ ${formatNetworkRate(network.down)} / ↑ ${formatNetworkRate(network.up)}`,
-      networkDown: formatNetworkRate(network.down),
-      networkUp: formatNetworkRate(network.up),
-      networkDownMbps: network.down,
-      networkUpMbps: network.up,
-      networkCapacityMbps: networkCapacity,
-    };
-  } catch {
-    return {
-      socket,
-      online: false,
-      status: 'Offline',
-      ping: 'N/A',
-      cpu: 'N/A',
-      ram: 'N/A',
-      diskUsed: 0,
-      diskTotal: 0,
-      diskPercent: 0,
-      uptime: getUptime(),
-      network: 'N/A',
-      networkDown: 'N/A',
-      networkUp: 'N/A',
-      networkDownMbps: 0,
-      networkUpMbps: 0,
-      networkCapacityMbps: 0,
-    };
-  }
+  const [cpuResult, networkResult, capacityResult, diskResult] = await Promise.allSettled([
+    getCpuUsage(),
+    getNetworkUsage(),
+    getNetworkCapacity(),
+    getDiskUsage(),
+  ]);
+
+  const cpu = cpuResult.status === 'fulfilled' ? cpuResult.value : null;
+  const network = networkResult.status === 'fulfilled' ? networkResult.value : { down: 0, up: 0 };
+  const networkCapacity = capacityResult.status === 'fulfilled' ? capacityResult.value : 0;
+  const disk = diskResult.status === 'fulfilled' ? diskResult.value : { diskUsed: 0, diskTotal: 0, diskPercent: 0 };
+  const ram = getRamUsage();
+
+  return {
+    socket,
+    online,
+    status: online ? 'Online' : 'Offline',
+    ping,
+    cpu: cpu === null ? 'N/A' : `${cpu}%`,
+    ram: `${ram.usedGb} GB / ${ram.totalGb} GB`,
+    diskUsed: disk.diskUsed,
+    diskTotal: disk.diskTotal,
+    diskPercent: disk.diskPercent,
+    uptime: getUptime(),
+    network: online || networkResult.status === 'fulfilled'
+      ? `↓ ${formatNetworkRate(network.down)} / ↑ ${formatNetworkRate(network.up)}`
+      : 'N/A',
+    networkDown: online || networkResult.status === 'fulfilled' ? formatNetworkRate(network.down) : 'N/A',
+    networkUp: online || networkResult.status === 'fulfilled' ? formatNetworkRate(network.up) : 'N/A',
+    networkDownMbps: network.down,
+    networkUpMbps: network.up,
+    networkCapacityMbps: networkCapacity,
+  };
 }
 
 export async function isScreenAvailable() {
@@ -422,10 +415,10 @@ export async function getLatestLogs() {
     await wait(100);
 
     const log = await fs.readFile(logFile, 'utf8');
-    const lines = log.trimEnd().split(/\r?\n/).slice(-20).join('\n');
+    const lines = log.trimEnd().split(/\r?\n/).slice(-100).join('\n');
     return lines || 'No log output returned.';
   } catch (error) {
-    return error.message || 'Unable to read the server log.';
+    return 'Minecraft server unavailable';
   } finally {
     await fs.rm(logFile, { force: true }).catch(() => {});
   }

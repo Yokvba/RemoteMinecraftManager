@@ -21,6 +21,11 @@
       <div id="appView" class="hidden">
         <div class="topbar">
           <h1>Remote Manager</h1>
+          <div class="status-box" id="statusBox">
+              <span class="status-dot" id="statusDot"></span>
+              <span id="statusText">Checking Minecraft status...</span>
+            </div>
+          
           <div class="topbar-right">
             
             <div class="hamburger-wrap">
@@ -35,25 +40,20 @@
                   <span aria-hidden="true">🖥️</span>
                   <span>Server stuff</span>
                 </button>
+                <button id="fileManagerPageBtn" class="menu-item" type="button">
+                  <span aria-hidden="true">📁</span>
+                  <span>File Manager</span>
+                </button>
               </div>
             </div>
             <button id="logoutBtn" class="logout-btn" type="button">Log out</button>
           </div>
         </div>
 
-        <div id="minecraftPage" class="page-panel">
-          <div class="status-box" id="statusBox">
-            <span class="status-dot" id="statusDot"></span>
-            <span id="statusText">Checking Minecraft status...</span>
-          </div>
+        <div class="workspace-layout">
+          <div id="minecraftPage" class="page-panel">
 
-          <div class="controls">
-            <button id="startBtn" type="button">Start</button>
-            <button id="stopBtn" class="danger" type="button">Stop</button>
-            <button id="logsBtn" type="button">Current Log</button>
-          </div>
-
-          <div class="terminal-panel">
+          <div class="terminal-panel minecraft-console-panel">
             <div class="terminal-header">
               <div class="terminal-window-controls" aria-hidden="true">
                 <span></span>
@@ -61,6 +61,11 @@
                 <span></span>
               </div>
               <span>Minecraft Console</span>
+              <div class="controls">
+                <button id="startBtn" type="button">Start</button>
+                <button id="stopBtn" class="danger" type="button">Stop</button>
+                <button id="logsBtn" class="btn-primary" type="button">Current Log</button>
+              </div>
             </div>
             <pre id="output">Waiting for status...</pre>
             <form id="consoleForm" class="terminal-form">
@@ -69,22 +74,17 @@
               <button type="submit">Send</button>
             </form>
           </div>
-        </div>
-
-        <div id="serverPage" class="page-panel hidden">
-          <div class="status-box" id="serverStatusBox">
-            <span class="status-dot" id="serverStatusDot"></span>
-            <span id="serverStatusText">Waiting for Log...</span>
           </div>
 
-          <div class="terminal-panel">
+          <div id="serverPage" class="page-panel hidden">
+          <div class="terminal-panel server-shell-panel">
             <div class="terminal-header">
               <div class="terminal-window-controls" aria-hidden="true">
                 <span></span>
                 <span></span>
                 <span></span>
               </div>
-              <span>Server Shell</span>
+              <span>Terminal</span>
             </div>
             <pre id="serverOutput">Waiting for shell input...</pre>
             <form id="serverCommandForm" class="terminal-form">
@@ -93,55 +93,84 @@
               <button type="submit">Send</button>
             </form>
           </div>
-          <br>
-          <br>
+          </div>
+        
+          <div class="terminal-panel status-terminal-panel">
+          <div class="terminal-header">
+            <div class="terminal-window-controls" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <span>Server Usage %</span>
+          </div>
           <div class="server-status-panel">
             <div class="stat-card">
-              <div class="stat-label"><span aria-hidden="true">📶</span> Status</div>
-              <div class="stat-value" id="serverStatusValue">N/A</div>
+            <div class="stat-label"><span aria-hidden="true">📶</span> Status</div>
+            <div class="stat-value" id="serverStatusValue">N/A</div>
             </div>
             <div class="stat-card">
-              <div class="stat-label"><span aria-hidden="true">🏓</span> Ping</div>
-              <div class="stat-value" id="serverPingValue">N/A</div>
+            <div class="stat-label"><span aria-hidden="true">🏓</span> Ping</div>
+            <div class="stat-value" id="serverPingValue">N/A</div>
             </div>
             <div class="stat-card">
-              <div class="stat-label"><span aria-hidden="true">🖥️</span> CPU</div>
-              <div class="stat-value" id="serverCpuValue">N/A</div>
+            <div class="stat-label"><span aria-hidden="true">🖥️</span> CPU</div>
+            <div class="stat-value" id="serverCpuValue">N/A</div>
             </div>
             <div class="stat-card">
-              <div class="stat-label"><span aria-hidden="true">💾</span> RAM</div>
-              <div class="stat-value" id="serverRamValue">N/A</div>
+            <div class="stat-label"><span aria-hidden="true">💾</span> RAM</div>
+            <div class="stat-value" id="serverRamValue">N/A</div>
             </div>
             <div class="stat-card">
-              <div class="stat-label"><span aria-hidden="true">📊</span> Disk Usage</div>
-              <div class="stat-value usage-value" id="serverDiskPercent">0%</div>
-              <div id="serverDiskInfo" style="font-size: 0.85rem; color: #9ca3af; margin-top: 4px;">0 GB / 0 GB</div>
-              <div class="usage-bar">
-                <span id="serverDiskBar" style="width: 0%"></span>
+            <div class="stat-label"><span aria-hidden="true">📊</span> Disk Usage</div>
+            <div class="stat-value usage-value" id="serverDiskPercent">0%</div>
+            <div id="serverDiskInfo" style="font-size: 0.85rem; color: #9ca3af; margin-top: 4px;">0 GB / 0 GB</div>
+            <div class="usage-bar">
+              <span id="serverDiskBar" style="width: 0%"></span>
+            </div>
+            </div>
+            <div class="stat-card">
+            <div class="stat-label"><span aria-hidden="true">🌐</span> Network</div>
+            <div class="network-graph" aria-label="Network upload and download rates">
+              <div class="network-rate">
+                <div class="network-rate-header">
+                  <span>↓ Downlink</span>
+                  <strong id="serverNetworkDownValue">N/A</strong>
+                </div>
+                <div class="network-bar"><span id="serverNetworkDownBar"></span></div>
+              </div>
+              <div class="network-rate">
+                <div class="network-rate-header">
+                  <span>↑ Uplink</span>
+                  <strong id="serverNetworkUpValue">N/A</strong>
+                </div>
+                <div class="network-bar network-bar-up"><span id="serverNetworkUpBar"></span></div>
               </div>
             </div>
-            <div class="stat-card network-card">
-              <div class="stat-label"><span aria-hidden="true">🌐</span> Network</div>
-              <div class="network-graph" aria-label="Network upload and download rates">
-                <div class="network-rate">
-                  <div class="network-rate-header">
-                    <span>↓ Downlink</span>
-                    <strong id="serverNetworkDownValue">N/A</strong>
-                  </div>
-                  <div class="network-bar"><span id="serverNetworkDownBar"></span></div>
-                </div>
-                <div class="network-rate">
-                  <div class="network-rate-header">
-                    <span>↑ Uplink</span>
-                    <strong id="serverNetworkUpValue">N/A</strong>
-                  </div>
-                  <div class="network-bar network-bar-up"><span id="serverNetworkUpBar"></span></div>
-                </div>
-              </div>
             </div>
             <div class="stat-card stat-card-wide">
-              <div class="stat-label"><span aria-hidden="true">⏱️</span> Uptime</div>
-              <div class="stat-value" id="serverUptimeValue">N/A</div>
+            <div class="stat-label"><span aria-hidden="true">⏱️</span> Uptime</div>
+            <div class="stat-value" id="serverUptimeValue">N/A</div>
+            </div>
+          </div>
+          </div>
+
+          <div id="fileManagerPage" class="page-panel hidden">
+            <div class="terminal-panel file-manager-panel">
+              <div class="terminal-header">
+                <div class="terminal-window-controls" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span>File Manager</span>
+                <button id="refreshFilesBtn" class="file-refresh-btn" type="button">Refresh</button>
+              </div>
+              <div class="file-manager-path" id="fileManagerPath">Loading configured server path...</div>
+              <div id="fileManagerError" class="file-manager-error hidden"></div>
+              <div class="file-list" id="fileList" aria-live="polite">
+                <div class="file-list-empty">Loading files...</div>
+              </div>
             </div>
           </div>
         </div>

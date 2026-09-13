@@ -20,13 +20,33 @@ body {
 }
 
 .container {
-  width: min(900px, calc(100% - 32px));
+  width: 90%;
   margin: 48px auto;
   padding: 24px;
   background: rgba(17, 24, 39, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   box-shadow: 0 16px 32px var(--shadow);
+  transition: width 0.35s ease;
+}
+
+body:has(#loginView:not(.hidden)) .container {
+  width: min(520px, calc(100% - 32px));
+}
+
+#appView:not(.hidden) {
+  animation: dashboard-enter 0.4s ease both;
+}
+
+@keyframes dashboard-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 h1, h2 {
@@ -79,6 +99,12 @@ h1, h2 {
   gap: 12px;
 }
 
+#loginView {
+  width: min(420px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+
 input {
   width: 100%;
   padding: 12px 14px;
@@ -86,6 +112,23 @@ input {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(15, 23, 42, 0.8);
   color: var(--text);
+}
+
+.workspace-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.workspace-layout > .page-panel,
+.workspace-layout > .status-terminal-panel {
+  min-width: 0;
+}
+
+.workspace-layout > .page-panel {
+  display: flex;
+  flex-direction: column;
 }
 
 .status-box {
@@ -100,11 +143,16 @@ input {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-  background: rgba(15, 23, 42, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
   padding: 14px;
   margin-bottom: 32px;
+}
+
+.status-terminal-panel {
+  margin-top: 0;
+}
+
+.page-panel > .terminal-panel {
+  flex: 1;
 }
 
 .stat-card {
@@ -137,6 +185,7 @@ input {
   font-weight: 700;
   color: var(--text);
   word-break: break-word;
+  text-shadow: 0px 0px 7px black;
 }
 
 .usage-value {
@@ -215,7 +264,19 @@ input {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+}
+
+.topbar h1,
+#statusText {
+  text-shadow: 0px 0px 7px black;
+}
+
+.topbar h1 {
+  margin-bottom: 0;
+}
+
+.topbar > .status-box {
+  margin: 0;
 }
 
 .topbar-right {
@@ -231,6 +292,7 @@ input {
 
 .hamburger,
 .settings-btn {
+  --button-shadow: rgba(107, 114, 128, 0.65);
   background: #374151;
   border-radius: 10px;
   width: 46px;
@@ -288,10 +350,22 @@ input {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 24px;
+  justify-content: flex-end;
+}
+
+.terminal-header .controls {
+  flex-direction: row-reverse;
+  margin-left: auto;
+  gap: 6px;
+}
+
+.controls button {
+  padding: 7px 12px;
+  font-size: 0.75rem;
 }
 
 button {
+  --button-shadow: rgba(59, 130, 246, 0.55);
   border: none;
   border-radius: 10px;
   padding: 10px 18px;
@@ -300,11 +374,13 @@ button {
   transition: transform 0.15s ease, opacity 0.15s ease;
   background: #3b82f6;
   color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 button:hover {
   transform: translateY(-1px);
   opacity: 0.95;
+  box-shadow: 0 0 14px var(--button-shadow);
 }
 
 button:disabled {
@@ -313,17 +389,13 @@ button:disabled {
 }
 
 button.danger {
+  --button-shadow: rgba(239, 68, 68, 0.65);
   background: var(--danger);
 }
 
 .logout-btn {
+  --button-shadow: rgba(107, 114, 128, 0.65);
   background: #4b5563;
-}
-
-#consoleForm {
-  display: flex;
-  gap: 12px;
-  margin-top: 8px;
 }
 
 .terminal-panel {
@@ -335,6 +407,101 @@ button.danger {
   margin-top: 32px;
 }
 
+.server-shell-panel,
+.minecraft-console-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.server-shell-panel .terminal-header,
+.minecraft-console-panel .terminal-header {
+  min-height: 50px;
+}
+
+.server-shell-panel pre,
+.minecraft-console-panel pre {
+  flex: 1;
+}
+
+.server-shell-panel .terminal-form,
+.minecraft-console-panel .terminal-form {
+  margin-top: 0;
+}
+
+.file-manager-panel {
+  min-height: 460px;
+}
+
+.file-manager-panel .terminal-header {
+  justify-content: flex-start;
+}
+
+.file-refresh-btn {
+  margin-left: auto;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+}
+
+.file-manager-path {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(2, 8, 23, 0.65);
+  color: var(--muted);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.file-manager-error,
+.file-list-empty {
+  padding: 18px;
+  color: #fca5a5;
+}
+
+.file-list-empty {
+  color: var(--muted);
+}
+
+.file-list {
+  overflow: auto;
+}
+
+.file-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px 190px;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.file-row:last-child {
+  border-bottom: none;
+}
+
+.file-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.file-type,
+.file-date {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 640px) {
+  .file-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .file-date {
+    grid-column: 1 / -1;
+  }
+}
+
 .terminal-header {
   display: flex;
   align-items: center;
@@ -344,6 +511,7 @@ button.danger {
   background: rgba(30, 41, 59, 0.9);
   font-weight: 700;
   color: #dbeafe;
+  text-shadow: 0px 0px 7px black;
 }
 
 .terminal-window-controls {
@@ -549,10 +717,12 @@ legend {
 }
 
 .btn-primary {
+  --button-shadow: rgba(34, 197, 94, 0.65);
   background: #22c55e;
 }
 
 .btn-secondary {
+  --button-shadow: rgba(107, 114, 128, 0.65);
   background: #4b5563;
 }
 
@@ -564,6 +734,10 @@ legend {
 @media (max-width: 640px) {
   .container {
     padding: 18px;
+  }
+
+  .workspace-layout {
+    grid-template-columns: 1fr;
   }
 
   .topbar,
