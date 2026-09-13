@@ -44,7 +44,15 @@ const settingsBtn = document.getElementById('settingsBtn'),
   closeSettingsBtn = document.getElementById('closeSettingsBtn'),
   cancelSettingsBtn = document.getElementById('cancelSettingsBtn'),
   settingsForm = document.getElementById('settingsForm'),
+  fileEditorModal = document.getElementById('fileEditorModal'),
+  closeFileEditorBtn = document.getElementById('closeFileEditorBtn'),
+  cancelFileEditorBtn = document.getElementById('cancelFileEditorBtn'),
+  saveFileEditorBtn = document.getElementById('saveFileEditorBtn'),
+  fileEditorTitle = document.getElementById('fileEditorTitle'),
+  fileEditorInput = document.getElementById('fileEditorInput'),
+  fileEditorError = document.getElementById('fileEditorError'),
   refreshFilesBtn = document.getElementById('refreshFilesBtn'),
+  parentDirectoryBtn = document.getElementById('parentDirectoryBtn'),
   fileManagerPath = document.getElementById('fileManagerPath'),
   fileManagerError = document.getElementById('fileManagerError'),
   fileList = document.getElementById('fileList');
@@ -52,6 +60,7 @@ const settingsBtn = document.getElementById('settingsBtn'),
 const DEFAULT_REFRESH_INTERVAL_MS = 1500;
 let lastStatusData = null;
 let refreshTimer = null;
+let currentFilesPath = '';
 
 function setStatus(online) {
   statusText.textContent = online ? 'Minecraft is online' : 'Minecraft is offline';
@@ -106,28 +115,134 @@ function renderFiles(entries) {
 
   entries.forEach((entry) => {
     const row = document.createElement('div');
-    row.className = 'file-row';
-    row.innerHTML = `
-      <span class="file-name"><span aria-hidden="true">${entry.type === 'directory' ? '📁' : '📄'}</span>${entry.name}</span>
-      <span class="file-type">${entry.type === 'directory' ? 'Directory' : formatFileSize(entry.size)}</span>
-      <span class="file-date">${new Date(entry.modifiedAt).toLocaleString()}</span>`;
+    row.className = `file-row ${entry.type === 'directory' ? 'file-row-directory' : ''}`;
+    const openButton = document.createElement('button');
+    openButton.className = 'file-name file-open-btn';
+    openButton.type = 'button';
+    openButton.textContent = `${entry.type === 'directory' ? '📁' : '📄'} ${entry.name}`;
+
+    const type = document.createElement('span');
+    type.className = 'file-type';
+    type.textContent = entry.type === 'directory' ? 'Directory' : formatFileSize(entry.size);
+
+    const date = document.createElement('span');
+    date.className = 'file-date';
+    date.textContent = new Date(entry.modifiedAt).toLocaleString();
+
+    const actions = document.createElement('span');
+    actions.className = 'file-actions';
+    actions.innerHTML = '<button class="file-action-btn file-rename-btn" type="button">✏️</button><button class="file-action-btn file-delete-btn" type="button">🗑️</button>';
+
+    row.append(openButton, type, date, actions);
+    openButton.addEventListener('click', () => {
+      if (entry.type === 'directory') loadFiles(`${currentFilesPath}/${entry.name}`);
+      else openFileEditor(entry);
+    });
+    row.querySelector('.file-rename-btn').addEventListener('click', () => renameFile(entry));
+    row.querySelector('.file-delete-btn').addEventListener('click', () => deleteFile(entry));
     fileList.appendChild(row);
   });
 }
 
-async function loadFiles() {
+async function openFileEditor(entry) {
+  const relativePath = `${currentFilesPath}/${entry.name}`.replace(/^\/+/, '');
+  fileEditorTitle.textContent = `Edit ${entry.name}`;
+  fileEditorError.classList.add('hidden');
+  fileEditorInput.value = 'Loading...';
+  fileEditorInput.disabled = true;
+  saveFileEditorBtn.disabled = true;
+  fileEditorModal.classList.remove('hidden');
+
+  try {
+    const data = await fetchJson(`/api/files/content?path=${encodeURIComponent(relativePath)}`);
+    fileEditorInput.value = data.content;
+    fileEditorInput.disabled = false;
+    saveFileEditorBtn.disabled = false;
+    fileEditorInput.focus();
+  } catch (error) {
+    fileEditorInput.value = '';
+    fileEditorError.textContent = error.message;
+    fileEditorError.classList.remove('hidden');
+  }
+
+  saveFileEditorBtn.dataset.path = relativePath;
+}
+
+function closeFileEditor() {
+  fileEditorModal.classList.add('hidden');
+  fileEditorInput.value = '';
+  fileEditorInput.disabled = true;
+  saveFileEditorBtn.disabled = true;
+}
+
+async function saveFileEditor() {
+  const relativePath = saveFileEditorBtn.dataset.path;
+  if (!relativePath) return;
+
+  saveFileEditorBtn.disabled = true;
+  try {
+    await fetchJson('/api/files/content', {
+      method: 'POST',
+      body: JSON.stringify({ path: relativePath, content: fileEditorInput.value }),
+    });
+    alert('File saved successfully.');
+    closeFileEditor();
+    await loadFiles();
+  } catch (error) {
+    fileEditorError.textContent = error.message;
+    fileEditorError.classList.remove('hidden');
+    saveFileEditorBtn.disabled = false;
+  }
+}
+
+async function loadFiles(relativePath = currentFilesPath) {
   fileManagerError.classList.add('hidden');
   fileList.innerHTML = '<div class="file-list-empty">Loading files...</div>';
 
   try {
-    const data = await fetchJson('/api/files');
+    const normalizedPath = relativePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+    const query = normalizedPath ? `?path=${encodeURIComponent(normalizedPath)}` : '';
+    const data = await fetchJson(`/api/files${query}`);
+    currentFilesPath = data.relativePath || '';
     fileManagerPath.textContent = data.path;
+    parentDirectoryBtn.disabled = !currentFilesPath;
     renderFiles(data.entries);
   } catch (error) {
     fileManagerPath.textContent = 'Configured server path unavailable';
     fileManagerError.textContent = error.message;
     fileManagerError.classList.remove('hidden');
     fileList.replaceChildren();
+  }
+}
+
+async function renameFile(entry) {
+  const newName = prompt(`Rename ${entry.name} to:`, entry.name);
+  if (!newName || newName === entry.name) return;
+
+  try {
+    await fetchJson('/api/files/rename', {
+      method: 'POST',
+      body: JSON.stringify({ path: `${currentFilesPath}/${entry.name}`, newName }),
+    });
+    await loadFiles();
+  } catch (error) {
+    fileManagerError.textContent = error.message;
+    fileManagerError.classList.remove('hidden');
+  }
+}
+
+async function deleteFile(entry) {
+  if (!confirm(`Delete ${entry.type === 'directory' ? 'folder' : 'file'} "${entry.name}"?`)) return;
+
+  try {
+    await fetchJson('/api/files/delete', {
+      method: 'POST',
+      body: JSON.stringify({ path: `${currentFilesPath}/${entry.name}` }),
+    });
+    await loadFiles();
+  } catch (error) {
+    fileManagerError.textContent = error.message;
+    fileManagerError.classList.remove('hidden');
   }
 }
 
@@ -293,7 +408,17 @@ menuToggle.addEventListener('click', toggleMenu);
 minecraftPageBtn.addEventListener('click', () => showPage('minecraft'));
 serverPageBtn.addEventListener('click', () => showPage('server'));
 fileManagerPageBtn.addEventListener('click', () => showPage('files'));
-refreshFilesBtn.addEventListener('click', loadFiles);
+refreshFilesBtn.addEventListener('click', () => loadFiles());
+parentDirectoryBtn.addEventListener('click', () => {
+  const parentPath = currentFilesPath.split('/').slice(0, -1).join('/');
+  loadFiles(parentPath);
+});
+closeFileEditorBtn.addEventListener('click', closeFileEditor);
+cancelFileEditorBtn.addEventListener('click', closeFileEditor);
+saveFileEditorBtn.addEventListener('click', saveFileEditor);
+fileEditorModal.addEventListener('click', (event) => {
+  if (event.target === fileEditorModal) closeFileEditor();
+});
 settingsBtn.addEventListener('click', openSettings);
 closeSettingsBtn.addEventListener('click', closeSettings);
 cancelSettingsBtn.addEventListener('click', closeSettings);

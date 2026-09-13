@@ -20,7 +20,7 @@
 
       <div id="appView" class="hidden">
         <div class="topbar">
-          <h1>Remote Manager</h1>
+          <h1>Remote Dashboard</h1>
           <div class="status-box" id="statusBox">
               <span class="status-dot" id="statusDot"></span>
               <span id="statusText">Checking Minecraft status...</span>
@@ -38,7 +38,7 @@
                 </button>
                 <button id="serverPageBtn" class="menu-item" type="button">
                   <span aria-hidden="true">🖥️</span>
-                  <span>Server stuff</span>
+                  <span>Terminal</span>
                 </button>
                 <button id="fileManagerPageBtn" class="menu-item" type="button">
                   <span aria-hidden="true">📁</span>
@@ -93,6 +93,28 @@
               <button type="submit">Send</button>
             </form>
           </div>
+          </div>
+
+          <div id="fileManagerPage" class="page-panel hidden">
+            <div class="terminal-panel file-manager-panel">
+              <div class="terminal-header">
+                <div class="terminal-window-controls" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span>File Manager</span>
+                <button id="refreshFilesBtn" class="file-refresh-btn" type="button">Refresh ⟳</button>
+              </div>
+              <div class="file-manager-toolbar">
+                <button id="parentDirectoryBtn" class="file-nav-btn" type="button" style="transform: rotate(90deg);" disabled>↩</button>
+                <div class="file-manager-path" id="fileManagerPath">Loading configured server path...</div>
+              </div>
+              <div id="fileManagerError" class="file-manager-error hidden"></div>
+              <div class="file-list" id="fileList" aria-live="polite">
+                <div class="file-list-empty">Loading files...</div>
+              </div>
+            </div>
           </div>
         
           <div class="terminal-panel status-terminal-panel">
@@ -155,24 +177,6 @@
           </div>
           </div>
 
-          <div id="fileManagerPage" class="page-panel hidden">
-            <div class="terminal-panel file-manager-panel">
-              <div class="terminal-header">
-                <div class="terminal-window-controls" aria-hidden="true">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-                <span>File Manager</span>
-                <button id="refreshFilesBtn" class="file-refresh-btn" type="button">Refresh</button>
-              </div>
-              <div class="file-manager-path" id="fileManagerPath">Loading configured server path...</div>
-              <div id="fileManagerError" class="file-manager-error hidden"></div>
-              <div class="file-list" id="fileList" aria-live="polite">
-                <div class="file-list-empty">Loading files...</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -235,6 +239,23 @@
                 <button type="submit" class="btn-primary">Save Settings</button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+
+      <div id="fileEditorModal" class="modal hidden">
+        <div class="modal-content file-editor-modal-content">
+          <div class="modal-header">
+            <h2 id="fileEditorTitle">Edit File</h2>
+            <button id="closeFileEditorBtn" class="modal-close" type="button">✕</button>
+          </div>
+          <div class="file-editor-body">
+            <div id="fileEditorError" class="file-manager-error hidden"></div>
+            <textarea id="fileEditorInput" class="file-editor-input" spellcheck="false" disabled></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancelFileEditorBtn" class="btn-secondary">Cancel</button>
+            <button type="button" id="saveFileEditorBtn" class="btn-primary" disabled>Save File</button>
           </div>
         </div>
       </div>

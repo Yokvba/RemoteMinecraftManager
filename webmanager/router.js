@@ -53,6 +53,34 @@ async function readBody(req) {
   });
 }
 
+async function getConfiguredRoot() {
+  return fs.realpath(path.resolve(minecraftConfig.serverPath || '.'));
+}
+
+async function resolveConfiguredPath(relativePath = '', { allowMissing = false } = {}) {
+  const rootPath = await getConfiguredRoot();
+  const normalizedPath = String(relativePath || '').replace(/\\/g, '/').replace(/^\/+/, '');
+  const requestedPath = path.resolve(rootPath, normalizedPath);
+
+  if (requestedPath !== rootPath && !requestedPath.startsWith(`${rootPath}${path.sep}`)) {
+    throw new Error('Path is outside the configured server directory.');
+  }
+
+  let resolvedPath;
+  try {
+    resolvedPath = await fs.realpath(requestedPath);
+  } catch (error) {
+    if (!allowMissing || error.code !== 'ENOENT') throw error;
+    resolvedPath = requestedPath;
+  }
+
+  if (resolvedPath !== rootPath && !resolvedPath.startsWith(`${rootPath}${path.sep}`)) {
+    throw new Error('Path is outside the configured server directory.');
+  }
+
+  return { rootPath, resolvedPath, relativePath: path.relative(rootPath, resolvedPath).split(path.sep).join('/') };
+}
+
 async function serveStaticFile(req, res, relativePath) {
   const safePath = relativePath === '/' ? 'index.html' : relativePath.replace(/^\/+|\/+$/g, '');
   const filePath = path.resolve(__dirname, safePath);
@@ -200,10 +228,11 @@ export async function handleRequest(req, res) {
     if (!user) return;
 
     try {
-      const rootPath = path.resolve(minecraftConfig.serverPath || '.');
-      const entries = await fs.readdir(rootPath, { withFileTypes: true });
+      const requestedPath = url.searchParams.get('path') || '';
+      const resolved = await resolveConfiguredPath(requestedPath);
+      const entries = await fs.readdir(resolved.resolvedPath, { withFileTypes: true });
       const files = await Promise.all(entries.map(async (entry) => {
-        const entryPath = path.join(rootPath, entry.name);
+        const entryPath = path.join(resolved.resolvedPath, entry.name);
         const stats = await fs.stat(entryPath);
 
         return {
@@ -221,11 +250,90 @@ export async function handleRequest(req, res) {
 
       sendJson(res, 200, {
         success: true,
-        path: rootPath,
+        path: resolved.resolvedPath,
+        relativePath: resolved.relativePath,
         entries: files,
       });
     } catch (error) {
       sendJson(res, 400, { success: false, message: `Unable to read configured server path: ${error.message}` });
+    }
+    return;
+  }
+
+  if (req.method === 'GET' && pathname === '/api/files/content') {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
+    try {
+      const resolved = await resolveConfiguredPath(url.searchParams.get('path') || '');
+      const stats = await fs.stat(resolved.resolvedPath);
+      if (!stats.isFile()) throw new Error('Only files can be opened.');
+
+      const content = await fs.readFile(resolved.resolvedPath, 'utf8');
+      sendJson(res, 200, { success: true, path: resolved.relativePath, content });
+    } catch (error) {
+      sendJson(res, 400, { success: false, message: `Unable to open file: ${error.message}` });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/files/content') {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
+    try {
+      const body = await readBody(req);
+      const resolved = await resolveConfiguredPath(body.path);
+      const stats = await fs.stat(resolved.resolvedPath);
+      if (!stats.isFile()) throw new Error('Only files can be saved.');
+      if (typeof body.content !== 'string') throw new Error('File content must be text.');
+
+      await fs.writeFile(resolved.resolvedPath, body.content, 'utf8');
+      sendJson(res, 200, { success: true, path: resolved.relativePath });
+    } catch (error) {
+      sendJson(res, 400, { success: false, message: `Unable to save file: ${error.message}` });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/files/rename') {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
+    try {
+      const body = await readBody(req);
+      const source = await resolveConfiguredPath(body.path);
+      const newName = String(body.newName || '').trim();
+
+      if (!newName || newName === '.' || newName === '..' || /[\\/]/.test(newName)) {
+        throw new Error('A valid name without path separators is required.');
+      }
+
+      const destination = await resolveConfiguredPath(
+        path.join(source.relativePath ? path.dirname(source.relativePath) : '', newName),
+        { allowMissing: true }
+      );
+      await fs.rename(source.resolvedPath, destination.resolvedPath);
+      sendJson(res, 200, { success: true });
+    } catch (error) {
+      sendJson(res, 400, { success: false, message: `Unable to rename item: ${error.message}` });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/files/delete') {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
+    try {
+      const body = await readBody(req);
+      const target = await resolveConfiguredPath(body.path);
+      if (target.resolvedPath === target.rootPath) throw new Error('The configured root cannot be deleted.');
+      const stats = await fs.lstat(target.resolvedPath);
+      await fs.rm(target.resolvedPath, { recursive: stats.isDirectory(), force: false });
+      sendJson(res, 200, { success: true });
+    } catch (error) {
+      sendJson(res, 400, { success: false, message: `Unable to delete item: ${error.message}` });
     }
     return;
   }
