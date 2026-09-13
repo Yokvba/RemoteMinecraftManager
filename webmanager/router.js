@@ -253,7 +253,7 @@ export async function handleRequest(req, res) {
     try {
       const body = await readBody(req);
       
-      // Prevent modification of forbidden commands, discord, and permissions
+      // Prevent modification of forbidden stuff
       if (body.forbiddenCommands || body.discord || body.permissions) {
         sendJson(res, 403, { success: false, message: 'Cannot modify forbidden commands, discord, or permissions.' });
         return;
@@ -263,7 +263,7 @@ export async function handleRequest(req, res) {
       const configPath = path.join(__dirname, '..', 'config.json');
       const currentConfig = JSON.parse(await fs.readFile(configPath, 'utf8'));
 
-      // Recursively merge updates
+      // Merge updates
       function mergeObjects(target, updates) {
         for (const key in updates) {
           if (typeof updates[key] === 'object' && updates[key] !== null && !Array.isArray(updates[key])) {
@@ -279,7 +279,7 @@ export async function handleRequest(req, res) {
 
       mergeObjects(currentConfig, body);
 
-      // Write updated config back with proper error handling
+      // Write updated config back to file
       try {
         await fs.writeFile(configPath, JSON.stringify(currentConfig, null, 2), 'utf8');
         sendJson(res, 200, { success: true, message: 'Configuration updated successfully.' });
