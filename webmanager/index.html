@@ -64,7 +64,7 @@
               <div class="controls">
                 <button id="startBtn" type="button">Start</button>
                 <button id="stopBtn" class="danger" type="button">Stop</button>
-                <button id="logsBtn" class="btn-primary" type="button">Current Log</button>
+                <button id="logsBtn" class="btn-primary" type="button">Refresh ⟳</button>
               </div>
             </div>
             <pre id="output">Waiting for status...</pre>
@@ -102,9 +102,13 @@
                   <span></span>
                   <span></span>
                   <span></span>
-                </div>
+                </div>                
                 <span>File Manager</span>
-                <button id="refreshFilesBtn" class="file-refresh-btn" type="button">Refresh ⟳</button>
+                <div class="controls">
+                  <input id="uploadFileInput" type="file" multiple hidden>
+                  <button id="refreshFilesBtn" class="file-refresh-btn" type="button">Refresh ⟳</button>
+                  <button id="uploadFileBtn" class="button" type="button">Upload ⬆</button>
+                </div>
               </div>
               <div class="file-manager-toolbar">
                 <button id="parentDirectoryBtn" class="file-nav-btn" type="button" style="transform: rotate(90deg);" disabled>↩</button>

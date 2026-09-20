@@ -25,6 +25,8 @@ const mimeTypes = {
   '.svg': 'image/svg+xml',
 };
 
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB Upload Limit - Will change soon tho
+
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(payload, null, 2));
@@ -334,6 +336,43 @@ export async function handleRequest(req, res) {
       sendJson(res, 200, { success: true });
     } catch (error) {
       sendJson(res, 400, { success: false, message: `Unable to delete item: ${error.message}` });
+    }
+    return;
+  }
+    if (req.method === 'POST' && pathname === '/api/files/upload') {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
+    try {
+      const body = await readBody(req);
+      const fileName = String(body.name || '').trim();
+
+      if (!fileName || fileName === '.' || fileName === '..' || /[\\/]/.test(fileName)) {
+        throw new Error('A valid file name without path separators is required.');
+      }
+
+    if (typeof body.content !== 'string') {
+        throw new Error('File content must be base64-encoded text.');
+      }
+
+      const directory = await resolveConfiguredPath(body.path || '');
+      const directoryStats = await fs.stat(directory.resolvedPath);
+      if (!directoryStats.isDirectory()) throw new Error('Uploads can only be placed inside a directory.');
+
+      const destination = await resolveConfiguredPath(
+        path.join(directory.relativePath, fileName),
+        { allowMissing: true }
+      );
+
+      const buffer = Buffer.from(body.content, 'base64');
+      if (buffer.length > MAX_UPLOAD_BYTES) {
+        throw new Error(`File is too large. Maximum upload size is ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB.`);
+      }
+
+      await fs.writeFile(destination.resolvedPath, buffer);
+      sendJson(res, 200, { success: true, path: destination.relativePath });
+    } catch (error) {
+      sendJson(res, 400, { success: false, message: `Unable to upload file: ${error.message}` });
     }
     return;
   }

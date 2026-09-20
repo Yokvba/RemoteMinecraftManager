@@ -50,13 +50,16 @@ const settingsBtn = document.getElementById('settingsBtn'),
   saveFileEditorBtn = document.getElementById('saveFileEditorBtn'),
   fileEditorTitle = document.getElementById('fileEditorTitle'),
   fileEditorInput = document.getElementById('fileEditorInput'),
-  fileEditorError = document.getElementById('fileEditorError'),
+  fileEditorError = document.getElementById('fileEditorError'),  
   refreshFilesBtn = document.getElementById('refreshFilesBtn'),
+  uploadFileBtn = document.getElementById('uploadFileBtn'),
+  uploadFileInput = document.getElementById('uploadFileInput'),
   parentDirectoryBtn = document.getElementById('parentDirectoryBtn'),
   fileManagerPath = document.getElementById('fileManagerPath'),
   fileManagerError = document.getElementById('fileManagerError'),
   fileList = document.getElementById('fileList');
 
+  
 const DEFAULT_REFRESH_INTERVAL_MS = 1500;
 let lastStatusData = null;
 let refreshTimer = null;
@@ -246,6 +249,37 @@ async function deleteFile(entry) {
   }
 }
 
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+    reader.onerror = () => reject(new Error(`Failed to read "${file.name}".`));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadFiles(files) {
+  if (!files.length) return;
+  fileManagerError.classList.add('hidden');
+  uploadFileBtn.disabled = true;
+
+  try {
+    for (const file of files) {
+      const content = await readFileAsBase64(file);
+      await fetchJson('/api/files/upload', {
+        method: 'POST',
+        body: JSON.stringify({ path: currentFilesPath, name: file.name, content }),
+      });
+    }
+    await loadFiles();
+  } catch (error) {
+    fileManagerError.textContent = error.message;
+    fileManagerError.classList.remove('hidden');
+  } finally {
+    uploadFileBtn.disabled = false;
+  }
+}
+
 function setAuthenticated(user) {
   const isLoggedIn = Boolean(user);
   loginView.classList.toggle('hidden', isLoggedIn);
@@ -412,6 +446,12 @@ refreshFilesBtn.addEventListener('click', () => loadFiles());
 parentDirectoryBtn.addEventListener('click', () => {
   const parentPath = currentFilesPath.split('/').slice(0, -1).join('/');
   loadFiles(parentPath);
+});
+uploadFileBtn.addEventListener('click', () => uploadFileInput.click());
+uploadFileInput.addEventListener('change', () => {
+  const files = Array.from(uploadFileInput.files || []);
+  uploadFileInput.value = '';
+  uploadFiles(files);
 });
 closeFileEditorBtn.addEventListener('click', closeFileEditor);
 cancelFileEditorBtn.addEventListener('click', closeFileEditor);
