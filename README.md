@@ -1,4 +1,6 @@
 ### ℹ️ <ins>INFO:</ins>
+* This application is only made for private use. Incase you want a commercial version please contact [contact@bycrxh.it](mailto:contact@bycrxh.it).
+* Do not run this applicaton on the public web. If not avoidable, please use HTTPS and ensure proper security meassures. 
 * Run this script and your Minecraft Server as Root! (Important due to missing permission as normal user)
 > (or if you know how to use chmod, give permission to config.json, index.js and the whole webmanager path. The RemoteManager and Minecraft server have to run on the same user.)
 
