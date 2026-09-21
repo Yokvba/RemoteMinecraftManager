@@ -19,7 +19,9 @@
 
 ### ✍ <ins>TODO:</ins>
 Small:
-* Make discord bot alert when Server goes offline or unusually high server usage.
 * Remove 25Mb Upload Cap
-* Add Minecraft server specific buttons (e.g. Players, Whitelist, Banlist, maybe Backups)
 * Add Terms and Conditions and Cookies Agree Page.
+Major:
+* Make discord bot alert when Server goes offline or unusually high server usage.
+* Replace server usage in Minecraft page with Minecraft server specific buttons (e.g. Players, Whitelist, Banlist, maybe Backups).
+* Create, delete and manage multiple minecraft server.
