@@ -146,14 +146,16 @@ function renderFiles(entries) {
     const actions = document.createElement("span");
     actions.className = "file-actions";
     actions.innerHTML =
-      '<button class="file-action-btn file-rename-btn" type="button">✏️</button><button class="file-action-btn file-delete-btn" type="button">🗑️</button>';
-
+    '<button class="file-action-btn file-info-btn" type="button">ℹ️</button><button class="file-action-btn file-rename-btn" type="button">✏️</button><button class="file-action-btn file-delete-btn" type="button">🗑️</button>';
     row.append(openButton, type, date, actions);
     openButton.addEventListener("click", () => {
       if (entry.type === "directory")
         loadFiles(`${currentFilesPath}/${entry.name}`);
       else openFileEditor(entry);
-    });
+    });    
+    row
+      .querySelector(".file-info-btn")
+      .addEventListener("click", () => showFileInfo(entry));
     row
       .querySelector(".file-rename-btn")
       .addEventListener("click", () => renameFile(entry));
@@ -162,6 +164,20 @@ function renderFiles(entries) {
       .addEventListener("click", () => deleteFile(entry));
     fileList.appendChild(row);
   });
+}
+
+function showFileInfo(entry) {
+  const filePath = `/${currentFilesPath}/${entry.name}${entry.type === "directory" ? "/" : ""}`.replace(/\/+/g, "/");
+  const type = entry.type === "directory" ? "Directory" : "File";
+  const size = entry.type === "directory" ? "—" : formatFileSize(entry.size);
+  const created = entry.createdAt
+    ? new Date(entry.createdAt).toLocaleString()
+    : "Unknown";
+  const modified = new Date(entry.modifiedAt).toLocaleString();
+
+  alert(
+    `Name: ${entry.name}\nType: ${type}\nSize: ${size}\nCreated: ${created}\nModified: ${modified}\nPath: ${filePath}`,
+  );
 }
 
 async function openFileEditor(entry) {

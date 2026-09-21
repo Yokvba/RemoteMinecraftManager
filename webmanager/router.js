@@ -2,9 +2,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  clearLoginAttempts,
   createSession,
   destroySession,
+  getClientIp,
   getCurrentUser,
+  getLockoutRemainingMs,
+  isRateLimited,
+  recordFailedLogin,
   requireAuth,
   validateLogin,
 } from "./auth.js";
@@ -19,7 +24,6 @@ import {
   runHostCommand,
   sendConsoleCommand,
 } from "./server-utils.js";
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -183,6 +187,25 @@ export async function handleRequest(req, res) {
   }
 
   if (req.method === "POST" && pathname === "/api/login") {
+    const clientIp = getClientIp(req);
+
+    if (isRateLimited(clientIp)) {
+      const retryAfterSeconds = Math.ceil(
+        getLockoutRemainingMs(clientIp) / 1000,
+      );
+      res.writeHead(429, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Retry-After": String(retryAfterSeconds),
+      });
+      res.end(
+        JSON.stringify({
+          success: false,
+          message: `Too many failed login attempts. Try again in ${retryAfterSeconds} seconds.`,
+        }),
+      );
+      return;
+    }
+
     try {
       const body = await readBody(req);
       const username = String(body.username || "").trim();
@@ -190,6 +213,7 @@ export async function handleRequest(req, res) {
       const validUser = validateLogin(username, password);
 
       if (!validUser) {
+        recordFailedLogin(clientIp);
         sendJson(res, 401, {
           success: false,
           message: "Invalid username or password.",
@@ -197,6 +221,7 @@ export async function handleRequest(req, res) {
         return;
       }
 
+      clearLoginAttempts(clientIp);
       const sessionId = createSession(validUser);
 
       res.writeHead(200, {
@@ -278,8 +303,9 @@ export async function handleRequest(req, res) {
           return {
             name: entry.name,
             type: entry.isDirectory() ? "directory" : "file",
-            size: entry.isDirectory() ? 0 : stats.size,
+            size: entry.isDirectory() ? 0 : stats.size,            
             modifiedAt: stats.mtime.toISOString(),
+            createdAt: stats.birthtime.toISOString(),
           };
         }),
       );
