@@ -1,10 +1,10 @@
-import { exec, execFile } from 'node:child_process';
-import fs from 'node:fs/promises';
-import net from 'node:net';
-import os from 'node:os';
-import path from 'node:path';
-import { promisify } from 'node:util';
-import { config, minecraftConfig } from './config.js';
+import { exec, execFile } from "node:child_process";
+import fs from "node:fs/promises";
+import net from "node:net";
+import os from "node:os";
+import path from "node:path";
+import { promisify } from "node:util";
+import { config, minecraftConfig } from "./config.js";
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -16,12 +16,18 @@ let lastNetworkSnapshot = null;
 let networkCapacityMbps = null;
 
 export function outputText(stdout, stderr) {
-  return (stdout || '').trim() || (stderr || '').trim() || 'Command completed successfully.';
+  return (
+    (stdout || "").trim() ||
+    (stderr || "").trim() ||
+    "Command completed successfully."
+  );
 }
 
 export function isForbiddenCommand(command) {
   const normalized = command.trim().toLowerCase();
-  return forbiddenCommands.some((forbidden) => normalized.includes(forbidden.toLowerCase()));
+  return forbiddenCommands.some((forbidden) =>
+    normalized.includes(forbidden.toLowerCase()),
+  );
 }
 
 export function wait(milliseconds) {
@@ -31,17 +37,21 @@ export function wait(milliseconds) {
 export function tcpPing(host, port) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
-    const connectHost = host === '0.0.0.0' || host === '::' ? '127.0.0.1' : host;
-    const socket = net.connect({ host: connectHost, port, timeout: 3000 }, () => {
-      const ping = Date.now() - start;
-      socket.destroy();
-      resolve(ping);
-    });
+    const connectHost =
+      host === "0.0.0.0" || host === "::" ? "127.0.0.1" : host;
+    const socket = net.connect(
+      { host: connectHost, port, timeout: 3000 },
+      () => {
+        const ping = Date.now() - start;
+        socket.destroy();
+        resolve(ping);
+      },
+    );
 
-    socket.on('timeout', () => {
+    socket.on("timeout", () => {
       socket.destroy(new Error(`Timed out connecting to ${host}:${port}`));
     });
-    socket.on('error', reject);
+    socket.on("error", reject);
   });
 }
 
@@ -63,8 +73,14 @@ export function getCpuUsage() {
       for (let i = 0; i < end.length; i++) {
         const startCpu = start[i];
         const endCpu = end[i];
-        const startTotal = Object.values(startCpu).reduce((sum, value) => sum + value, 0);
-        const endTotal = Object.values(endCpu.times).reduce((sum, value) => sum + value, 0);
+        const startTotal = Object.values(startCpu).reduce(
+          (sum, value) => sum + value,
+          0,
+        );
+        const endTotal = Object.values(endCpu.times).reduce(
+          (sum, value) => sum + value,
+          0,
+        );
         const diffTotal = endTotal - startTotal;
         const diffIdle = endCpu.times.idle - startCpu.idle;
 
@@ -72,7 +88,8 @@ export function getCpuUsage() {
         idleDiff += diffIdle;
       }
 
-      const usage = totalDiff === 0 ? 0 : ((totalDiff - idleDiff) / totalDiff) * 100;
+      const usage =
+        totalDiff === 0 ? 0 : ((totalDiff - idleDiff) / totalDiff) * 100;
       resolve(Number(usage.toFixed(1)));
     }, 250);
   });
@@ -107,9 +124,9 @@ export function getUptime() {
 export async function getRawNetworkStats() {
   const platform = os.platform();
 
-  if (platform === 'linux') {
-    const data = await fs.readFile('/proc/net/dev', 'utf8');
-    const lines = data.split('\n').slice(2);
+  if (platform === "linux") {
+    const data = await fs.readFile("/proc/net/dev", "utf8");
+    const lines = data.split("\n").slice(2);
 
     let downBytes = 0;
     let upBytes = 0;
@@ -119,8 +136,8 @@ export async function getRawNetworkStats() {
       if (!trimmed) continue;
 
       const parts = trimmed.split(/\s+/);
-      const iface = parts[0].replace(':', '');
-      if (!iface || iface === 'lo') continue;
+      const iface = parts[0].replace(":", "");
+      if (!iface || iface === "lo") continue;
 
       downBytes += Number(parts[1]) || 0;
       upBytes += Number(parts[9]) || 0;
@@ -129,9 +146,9 @@ export async function getRawNetworkStats() {
     return { downBytes, upBytes };
   }
 
-  if (platform === 'win32') {
+  if (platform === "win32") {
     const { stdout } = await execAsync(
-      'powershell -NoProfile -Command "$stats = Get-CimInstance Win32_PerfFormattedData_Tcpip_NetworkInterface | Measure-Object -Property BytesReceivedPerSec,BytesSentPerSec -Sum; if ($stats) { Write-Output \"$($stats[0].Sum) $($stats[1].Sum)\" } else { Write-Output \"0 0\" }"'
+      'powershell -NoProfile -Command "$stats = Get-CimInstance Win32_PerfFormattedData_Tcpip_NetworkInterface | Measure-Object -Property BytesReceivedPerSec,BytesSentPerSec -Sum; if ($stats) { Write-Output \"$($stats[0].Sum) $($stats[1].Sum)\" } else { Write-Output \"0 0\" }"',
     );
 
     const [downBytes, upBytes] = stdout.trim().split(/\s+/).map(Number);
@@ -150,7 +167,7 @@ function parseLinkSpeed(value) {
 
   const amount = Number(match[1]);
   const unit = match[2].toLowerCase();
-  const multiplier = unit === 'gbps' ? 1000 : unit === 'kbps' ? 0.001 : 1;
+  const multiplier = unit === "gbps" ? 1000 : unit === "kbps" ? 0.001 : 1;
   return Number.isFinite(amount) ? amount * multiplier : 0;
 }
 
@@ -160,32 +177,38 @@ async function getNetworkCapacity() {
   try {
     const platform = os.platform();
 
-    if (platform === 'linux') {
-      const interfaces = await fs.readdir('/sys/class/net');
+    if (platform === "linux") {
+      const interfaces = await fs.readdir("/sys/class/net");
       const speeds = await Promise.all(
         interfaces
-          .filter((iface) => iface !== 'lo')
+          .filter((iface) => iface !== "lo")
           .map(async (iface) => {
             try {
-              const state = (await fs.readFile(`/sys/class/net/${iface}/operstate`, 'utf8')).trim();
-              if (state !== 'up') return 0;
+              const state = (
+                await fs.readFile(`/sys/class/net/${iface}/operstate`, "utf8")
+              ).trim();
+              if (state !== "up") return 0;
 
-              const speed = Number((await fs.readFile(`/sys/class/net/${iface}/speed`, 'utf8')).trim());
+              const speed = Number(
+                (
+                  await fs.readFile(`/sys/class/net/${iface}/speed`, "utf8")
+                ).trim(),
+              );
               return Number.isFinite(speed) && speed > 0 ? speed : 0;
             } catch {
               return 0;
             }
-          })
+          }),
       );
 
       networkCapacityMbps = Math.max(...speeds, 0);
-    } else if (platform === 'win32') {
+    } else if (platform === "win32") {
       const { stdout } = await execAsync(
-        'powershell -NoProfile -Command "Get-NetAdapter -Physical | Where-Object Status -eq \'Up\' | Select-Object -ExpandProperty LinkSpeed"'
+        "powershell -NoProfile -Command \"Get-NetAdapter -Physical | Where-Object Status -eq 'Up' | Select-Object -ExpandProperty LinkSpeed\"",
       );
       networkCapacityMbps = Math.max(
         ...stdout.split(/\r?\n/).map((line) => parseLinkSpeed(line)),
-        0
+        0,
       );
     } else {
       networkCapacityMbps = 0;
@@ -205,9 +228,16 @@ export async function getNetworkUsage() {
     return { up: 0, down: 0 };
   }
 
-  const elapsedSeconds = Math.max((Date.now() - lastNetworkSnapshot.timestamp) / 1000, 0.1);
-  const downMbps = ((current.downBytes - lastNetworkSnapshot.downBytes) * 8) / (1000000 * elapsedSeconds);
-  const upMbps = ((current.upBytes - lastNetworkSnapshot.upBytes) * 8) / (1000000 * elapsedSeconds);
+  const elapsedSeconds = Math.max(
+    (Date.now() - lastNetworkSnapshot.timestamp) / 1000,
+    0.1,
+  );
+  const downMbps =
+    ((current.downBytes - lastNetworkSnapshot.downBytes) * 8) /
+    (1000000 * elapsedSeconds);
+  const upMbps =
+    ((current.upBytes - lastNetworkSnapshot.upBytes) * 8) /
+    (1000000 * elapsedSeconds);
 
   lastNetworkSnapshot = { ...current, timestamp: Date.now() };
 
@@ -227,7 +257,10 @@ export function formatNetworkRate(mbps) {
 
 export async function getDiskUsage() {
   try {
-    const { stdout } = await execAsync('df -k /dev/sda1 2>/dev/null || df -k / 2>/dev/null || df -k . 2>/dev/null || wmic logicaldisk get size,freespace /format:csv 2>nul', { timeout: 5000, windowsHide: true });
+    const { stdout } = await execAsync(
+      "df -k /dev/sda1 2>/dev/null || df -k / 2>/dev/null || df -k . 2>/dev/null || wmic logicaldisk get size,freespace /format:csv 2>nul",
+      { timeout: 5000, windowsHide: true },
+    );
 
     const lines = stdout
       .split(/\r?\n/)
@@ -235,12 +268,16 @@ export async function getDiskUsage() {
       .filter(Boolean);
 
     const dataLine = lines.find((line) => {
-      if (line.startsWith('Filesystem') || line.startsWith('FreeSpace') || line.startsWith('Name')) {
+      if (
+        line.startsWith("Filesystem") ||
+        line.startsWith("FreeSpace") ||
+        line.startsWith("Name")
+      ) {
         return false;
       }
 
       const parts = line.split(/\s+/);
-      return parts.length >= 4 && /^\d+$/.test(parts[1] || '');
+      return parts.length >= 4 && /^\d+$/.test(parts[1] || "");
     });
 
     if (dataLine) {
@@ -248,7 +285,7 @@ export async function getDiskUsage() {
       const totalK = Number(parts[1]);
       const usedK = Number(parts[2]);
       const availK = Number(parts[3]);
-      const percentText = String(parts[4] || '0').replace('%', '');
+      const percentText = String(parts[4] || "0").replace("%", "");
       const percent = Number(percentText);
 
       if (Number.isFinite(totalK) && Number.isFinite(usedK)) {
@@ -275,8 +312,9 @@ export async function getDiskUsage() {
 }
 
 export async function getHostStatus() {
-  const socket = targetHost && targetPort ? `${targetHost}:${targetPort}` : 'N/A';
-  let ping = 'N/A';
+  const socket =
+    targetHost && targetPort ? `${targetHost}:${targetPort}` : "N/A";
+  let ping = "N/A";
   let online = false;
 
   try {
@@ -284,35 +322,50 @@ export async function getHostStatus() {
     online = true;
   } catch {}
 
-  const [cpuResult, networkResult, capacityResult, diskResult] = await Promise.allSettled([
-    getCpuUsage(),
-    getNetworkUsage(),
-    getNetworkCapacity(),
-    getDiskUsage(),
-  ]);
+  const [cpuResult, networkResult, capacityResult, diskResult] =
+    await Promise.allSettled([
+      getCpuUsage(),
+      getNetworkUsage(),
+      getNetworkCapacity(),
+      getDiskUsage(),
+    ]);
 
-  const cpu = cpuResult.status === 'fulfilled' ? cpuResult.value : null;
-  const network = networkResult.status === 'fulfilled' ? networkResult.value : { down: 0, up: 0 };
-  const networkCapacity = capacityResult.status === 'fulfilled' ? capacityResult.value : 0;
-  const disk = diskResult.status === 'fulfilled' ? diskResult.value : { diskUsed: 0, diskTotal: 0, diskPercent: 0 };
+  const cpu = cpuResult.status === "fulfilled" ? cpuResult.value : null;
+  const network =
+    networkResult.status === "fulfilled"
+      ? networkResult.value
+      : { down: 0, up: 0 };
+  const networkCapacity =
+    capacityResult.status === "fulfilled" ? capacityResult.value : 0;
+  const disk =
+    diskResult.status === "fulfilled"
+      ? diskResult.value
+      : { diskUsed: 0, diskTotal: 0, diskPercent: 0 };
   const ram = getRamUsage();
 
   return {
     socket,
     online,
-    status: online ? 'Online' : 'Offline',
+    status: online ? "Online" : "Offline",
     ping,
-    cpu: cpu === null ? 'N/A' : `${cpu}%`,
+    cpu: cpu === null ? "N/A" : `${cpu}%`,
     ram: `${ram.usedGb} GB / ${ram.totalGb} GB`,
     diskUsed: disk.diskUsed,
     diskTotal: disk.diskTotal,
     diskPercent: disk.diskPercent,
     uptime: getUptime(),
-    network: online || networkResult.status === 'fulfilled'
-      ? `↓ ${formatNetworkRate(network.down)} / ↑ ${formatNetworkRate(network.up)}`
-      : 'N/A',
-    networkDown: online || networkResult.status === 'fulfilled' ? formatNetworkRate(network.down) : 'N/A',
-    networkUp: online || networkResult.status === 'fulfilled' ? formatNetworkRate(network.up) : 'N/A',
+    network:
+      online || networkResult.status === "fulfilled"
+        ? `↓ ${formatNetworkRate(network.down)} / ↑ ${formatNetworkRate(network.up)}`
+        : "N/A",
+    networkDown:
+      online || networkResult.status === "fulfilled"
+        ? formatNetworkRate(network.down)
+        : "N/A",
+    networkUp:
+      online || networkResult.status === "fulfilled"
+        ? formatNetworkRate(network.up)
+        : "N/A",
     networkDownMbps: network.down,
     networkUpMbps: network.up,
     networkCapacityMbps: networkCapacity,
@@ -321,7 +374,7 @@ export async function getHostStatus() {
 
 export async function isScreenAvailable() {
   try {
-    await execAsync('screen --version', { timeout: 2000, windowsHide: true });
+    await execAsync("screen --version", { timeout: 2000, windowsHide: true });
     return true;
   } catch (error) {
     return false;
@@ -333,20 +386,23 @@ export async function isServerOnline() {
     return false;
   }
 
-  const normalizedName = String(screenName || '').trim();
+  const normalizedName = String(screenName || "").trim();
   if (!normalizedName) {
     return false;
   }
 
   const candidateNames = new Set([
     normalizedName,
-    normalizedName.replace(/^\./, ''),
-    normalizedName.replace(/\s+/g, ''),
+    normalizedName.replace(/^\./, ""),
+    normalizedName.replace(/\s+/g, ""),
   ]);
 
   try {
-    const { stdout, stderr } = await execAsync('screen -ls', { timeout: 5000, windowsHide: true });
-    const combined = `${stdout || ''}\n${stderr || ''}`;
+    const { stdout, stderr } = await execAsync("screen -ls", {
+      timeout: 5000,
+      windowsHide: true,
+    });
+    const combined = `${stdout || ""}\n${stderr || ""}`;
     const lines = combined.split(/\r?\n/);
 
     const matched = lines.some((line) => {
@@ -355,7 +411,10 @@ export async function isServerOnline() {
 
       return Array.from(candidateNames).some((candidate) => {
         const normalized = candidate.toLowerCase();
-        return value.toLowerCase().includes(normalized) || value.toLowerCase().includes(`.${normalized}`);
+        return (
+          value.toLowerCase().includes(normalized) ||
+          value.toLowerCase().includes(`.${normalized}`)
+        );
       });
     });
 
@@ -363,7 +422,7 @@ export async function isServerOnline() {
       return true;
     }
   } catch (error) {
-    const combined = `${error.stdout || ''}\n${error.stderr || ''}`;
+    const combined = `${error.stdout || ""}\n${error.stderr || ""}`;
     const lines = combined.split(/\r?\n/);
     const matched = lines.some((line) => {
       const value = line.trim();
@@ -371,7 +430,10 @@ export async function isServerOnline() {
 
       return Array.from(candidateNames).some((candidate) => {
         const normalized = candidate.toLowerCase();
-        return value.toLowerCase().includes(normalized) || value.toLowerCase().includes(`.${normalized}`);
+        return (
+          value.toLowerCase().includes(normalized) ||
+          value.toLowerCase().includes(`.${normalized}`)
+        );
       });
     });
 
@@ -383,9 +445,9 @@ export async function isServerOnline() {
   try {
     const { stdout } = await execAsync(
       `ps -eo pid,comm,args --no-headers | grep -Ei "screen|java|minecraft" | grep -F "${normalizedName}"`,
-      { timeout: 5000, windowsHide: true }
+      { timeout: 5000, windowsHide: true },
     );
-    return Boolean((stdout || '').trim());
+    return Boolean((stdout || "").trim());
   } catch {
     return false;
   }
@@ -393,71 +455,90 @@ export async function isServerOnline() {
 
 export async function runCommand(command) {
   try {
-    const result = await execAsync(command, { timeout: 15000, windowsHide: true });
+    const result = await execAsync(command, {
+      timeout: 15000,
+      windowsHide: true,
+    });
     return outputText(result.stdout, result.stderr);
   } catch (error) {
     const output = outputText(error.stdout, error.stderr);
-    return output === 'Command completed successfully.' ? error.message : output;
+    return output === "Command completed successfully."
+      ? error.message
+      : output;
   }
 }
 
 export async function getLatestLogs() {
-  const logDir = path.resolve('/tmp');
+  const logDir = path.resolve("/tmp");
   await fs.mkdir(logDir, { recursive: true }).catch(() => {});
 
-  const logFile = path.join(logDir, `${screenName}-screen-${process.pid}-${Date.now()}.log`);
+  const logFile = path.join(
+    logDir,
+    `${screenName}-screen-${process.pid}-${Date.now()}.log`,
+  );
 
   try {
-    await execFileAsync('screen', ['-S', screenName, '-X', 'hardcopy', '-h', logFile], {
-      timeout: 5000,
-      windowsHide: true,
-    });
+    await execFileAsync(
+      "screen",
+      ["-S", screenName, "-X", "hardcopy", "-h", logFile],
+      {
+        timeout: 5000,
+        windowsHide: true,
+      },
+    );
     await wait(100);
 
-    const log = await fs.readFile(logFile, 'utf8');
-    const lines = log.trimEnd().split(/\r?\n/).slice(-100).join('\n');
-    return lines || 'No log output returned.';
+    const log = await fs.readFile(logFile, "utf8");
+    const lines = log.trimEnd().split(/\r?\n/).slice(-100).join("\n");
+    return lines || "No log output returned.";
   } catch (error) {
-    return 'Minecraft server unavailable';
+    return "Minecraft server unavailable";
   } finally {
     await fs.rm(logFile, { force: true }).catch(() => {});
   }
 }
 
 export async function sendConsoleCommand(command) {
-  const trimmed = (command || '').trim();
+  const trimmed = (command || "").trim();
 
   if (!trimmed) {
-    return 'No command was provided.';
+    return "No command was provided.";
   }
 
-  await execFileAsync('screen', ['-S', screenName, '-p', '0', '-X', 'stuff', `${trimmed}\r`], {
-    timeout: 5000,
-    windowsHide: true,
-  });
+  await execFileAsync(
+    "screen",
+    ["-S", screenName, "-p", "0", "-X", "stuff", `${trimmed}\r`],
+    {
+      timeout: 5000,
+      windowsHide: true,
+    },
+  );
 
   await wait(400);
   return getLatestLogs();
 }
 
 export async function runHostCommand(command) {
-  const trimmed = (command || '').trim();
+  const trimmed = (command || "").trim();
 
   if (!trimmed) {
-    throw new Error('No command was provided.');
+    throw new Error("No command was provided.");
   }
 
   if (isForbiddenCommand(trimmed)) {
-    throw new Error('This command is blocked by policy.');
+    throw new Error("This command is blocked by policy.");
   }
 
   try {
-    const result = await execAsync(trimmed, { timeout: 15000, windowsHide: true });
+    const result = await execAsync(trimmed, {
+      timeout: 15000,
+      windowsHide: true,
+    });
     const output = outputText(result.stdout, result.stderr);
-    return output || 'Command completed successfully.';
+    return output || "Command completed successfully.";
   } catch (error) {
     const output = outputText(error.stdout, error.stderr);
-    return output || error.message || 'Command failed.';
+    return output || error.message || "Command failed.";
   }
 }
 

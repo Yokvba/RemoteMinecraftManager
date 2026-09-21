@@ -1,12 +1,14 @@
-import { EmbedBuilder } from 'discord.js';
-import net from 'node:net';
-import os from 'node:os';
-import fs from 'node:fs';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
+import { EmbedBuilder } from "discord.js";
+import net from "node:net";
+import os from "node:os";
+import fs from "node:fs";
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
 
 const execAsync = promisify(exec);
-const config = JSON.parse(fs.readFileSync(new URL('../config.json', import.meta.url), 'utf8'));
+const config = JSON.parse(
+  fs.readFileSync(new URL("../config.json", import.meta.url), "utf8"),
+);
 const { host: targetHost, port: targetPort } = config.socket;
 let lastNetworkSnapshot = null;
 
@@ -19,7 +21,7 @@ function tcpPing(host, port) {
       resolve(ping);
     });
 
-    socket.on('error', (error) => {
+    socket.on("error", (error) => {
       reject(error);
     });
   });
@@ -43,8 +45,14 @@ function getCpuUsage() {
       for (let i = 0; i < end.length; i++) {
         const startCpu = start[i];
         const endCpu = end[i];
-        const startTotal = Object.values(startCpu).reduce((sum, value) => sum + value, 0);
-        const endTotal = Object.values(endCpu.times).reduce((sum, value) => sum + value, 0);
+        const startTotal = Object.values(startCpu).reduce(
+          (sum, value) => sum + value,
+          0,
+        );
+        const endTotal = Object.values(endCpu.times).reduce(
+          (sum, value) => sum + value,
+          0,
+        );
         const diffTotal = endTotal - startTotal;
         const diffIdle = endCpu.times.idle - startCpu.idle;
 
@@ -52,7 +60,8 @@ function getCpuUsage() {
         idleDiff += diffIdle;
       }
 
-      const usage = totalDiff === 0 ? 0 : ((totalDiff - idleDiff) / totalDiff) * 100;
+      const usage =
+        totalDiff === 0 ? 0 : ((totalDiff - idleDiff) / totalDiff) * 100;
       resolve(Number(usage.toFixed(1)));
     }, 250);
   });
@@ -72,9 +81,9 @@ function getRamUsage() {
 async function getRawNetworkStats() {
   const platform = os.platform();
 
-  if (platform === 'linux') {
-    const data = fs.readFileSync('/proc/net/dev', 'utf8');
-    const lines = data.split('\n').slice(2);
+  if (platform === "linux") {
+    const data = fs.readFileSync("/proc/net/dev", "utf8");
+    const lines = data.split("\n").slice(2);
 
     let downBytes = 0;
     let upBytes = 0;
@@ -84,8 +93,8 @@ async function getRawNetworkStats() {
       if (!trimmed) continue;
 
       const parts = trimmed.split(/\s+/);
-      const iface = parts[0].replace(':', '');
-      if (!iface || iface === 'lo') continue;
+      const iface = parts[0].replace(":", "");
+      if (!iface || iface === "lo") continue;
 
       downBytes += Number(parts[1]) || 0;
       upBytes += Number(parts[9]) || 0;
@@ -94,9 +103,9 @@ async function getRawNetworkStats() {
     return { downBytes, upBytes };
   }
 
-  if (platform === 'win32') {
+  if (platform === "win32") {
     const { stdout } = await execAsync(
-      'powershell -NoProfile -Command "$stats = Get-CimInstance Win32_PerfFormattedData_Tcpip_NetworkInterface | Measure-Object -Property BytesReceivedPerSec,BytesSentPerSec -Sum; if ($stats) { Write-Output \"$($stats[0].Sum) $($stats[1].Sum)\" } else { Write-Output \"0 0\" }"'
+      'powershell -NoProfile -Command "$stats = Get-CimInstance Win32_PerfFormattedData_Tcpip_NetworkInterface | Measure-Object -Property BytesReceivedPerSec,BytesSentPerSec -Sum; if ($stats) { Write-Output \"$($stats[0].Sum) $($stats[1].Sum)\" } else { Write-Output \"0 0\" }"',
     );
 
     const [downBytes, upBytes] = stdout.trim().split(/\s+/).map(Number);
@@ -117,9 +126,16 @@ async function getNetworkUsage() {
     return { up: 0, down: 0 };
   }
 
-  const elapsedSeconds = Math.max((Date.now() - lastNetworkSnapshot.timestamp) / 1000, 0.1);
-  const downMbps = ((current.downBytes - lastNetworkSnapshot.downBytes) * 8) / (1000000 * elapsedSeconds);
-  const upMbps = ((current.upBytes - lastNetworkSnapshot.upBytes) * 8) / (1000000 * elapsedSeconds);
+  const elapsedSeconds = Math.max(
+    (Date.now() - lastNetworkSnapshot.timestamp) / 1000,
+    0.1,
+  );
+  const downMbps =
+    ((current.downBytes - lastNetworkSnapshot.downBytes) * 8) /
+    (1000000 * elapsedSeconds);
+  const upMbps =
+    ((current.upBytes - lastNetworkSnapshot.upBytes) * 8) /
+    (1000000 * elapsedSeconds);
 
   lastNetworkSnapshot = { ...current, timestamp: Date.now() };
 
@@ -148,16 +164,28 @@ export async function run(interaction) {
       const network = await getNetworkUsage();
 
       const embed = new EmbedBuilder()
-        .setColor('#00FF7F')
-        .setTitle('🟢 Host Status')
-        .setDescription('Host Server is online and reachable.')
+        .setColor("#00FF7F")
+        .setTitle("🟢 Host Status")
+        .setDescription("Host Server is online and reachable.")
         .addFields(
-          { name: 'Socket', value: `${targetHost}:${targetPort}`, inline: true },
-          { name: 'Status', value: 'Online', inline: true },
-          { name: 'Ping', value: `${ping}ms`, inline: true },
-          { name: 'CPU', value: `${cpu}%`, inline: true },
-          { name: 'RAM', value: `${ram.usedGb} GB / ${ram.totalGb} GB`, inline: true },
-          { name: 'Network', value: `↓ ${formatNetworkRate(network.down)} / ↑ ${formatNetworkRate(network.up)}`, inline: true }
+          {
+            name: "Socket",
+            value: `${targetHost}:${targetPort}`,
+            inline: true,
+          },
+          { name: "Status", value: "Online", inline: true },
+          { name: "Ping", value: `${ping}ms`, inline: true },
+          { name: "CPU", value: `${cpu}%`, inline: true },
+          {
+            name: "RAM",
+            value: `${ram.usedGb} GB / ${ram.totalGb} GB`,
+            inline: true,
+          },
+          {
+            name: "Network",
+            value: `↓ ${formatNetworkRate(network.down)} / ↑ ${formatNetworkRate(network.up)}`,
+            inline: true,
+          },
         )
         .setTimestamp();
 
@@ -168,16 +196,20 @@ export async function run(interaction) {
       }
     } catch {
       const offlineEmbed = new EmbedBuilder()
-        .setColor('#FF4D4D')
-        .setTitle('🔴 Host Status')
-        .setDescription('Host Server is offline or unreachable.')
+        .setColor("#FF4D4D")
+        .setTitle("🔴 Host Status")
+        .setDescription("Host Server is offline or unreachable.")
         .addFields(
-          { name: 'Socket', value: `${targetHost}:${targetPort}`, inline: true },
-          { name: 'Status', value: 'Offline', inline: true },
-          { name: 'Ping', value: 'N/A', inline: true },
-          { name: 'CPU', value: 'N/A', inline: true },
-          { name: 'RAM', value: 'N/A', inline: true },
-          { name: 'Network', value: 'N/A', inline: true }
+          {
+            name: "Socket",
+            value: `${targetHost}:${targetPort}`,
+            inline: true,
+          },
+          { name: "Status", value: "Offline", inline: true },
+          { name: "Ping", value: "N/A", inline: true },
+          { name: "CPU", value: "N/A", inline: true },
+          { name: "RAM", value: "N/A", inline: true },
+          { name: "Network", value: "N/A", inline: true },
         )
         .setTimestamp();
 

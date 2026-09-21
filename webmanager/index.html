@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -11,26 +11,51 @@
       <div id="loginView" class="login-box">
         <h1>RemoteManager Login</h1>
         <form id="loginForm" class="login-form">
-          <input id="usernameInput" type="text" placeholder="Username" autocomplete="username" required />
-          <input id="passwordInput" type="password" placeholder="Password" autocomplete="current-password" required />
+          <input
+            id="usernameInput"
+            type="text"
+            placeholder="Username"
+            autocomplete="username"
+            required
+          />
+          <input
+            id="passwordInput"
+            type="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            required
+          />
           <button type="submit">Log in</button>
         </form>
-        <p id="loginError" style="color: #fca5a5; margin-bottom: 0;"></p>
+        <p id="loginError" style="color: #fca5a5; margin-bottom: 0"></p>
       </div>
 
       <div id="appView" class="hidden">
         <div class="topbar">
           <h1>Remote Dashboard</h1>
           <div class="status-box" id="statusBox">
-              <span class="status-dot" id="statusDot"></span>
-              <span id="statusText">Checking Minecraft status...</span>
-            </div>
-          
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Checking Minecraft status...</span>
+          </div>
+
           <div class="topbar-right">
-            
             <div class="hamburger-wrap">
-              <button id="settingsBtn" class="settings-btn" type="button" aria-label="Settings">⚙️</button>
-              <button id="menuToggle" class="hamburger" type="button" aria-label="Open menu">☰</button>
+              <button
+                id="settingsBtn"
+                class="settings-btn"
+                type="button"
+                aria-label="Settings"
+              >
+                ⚙️
+              </button>
+              <button
+                id="menuToggle"
+                class="hamburger"
+                type="button"
+                aria-label="Open menu"
+              >
+                ☰
+              </button>
               <div id="menu" class="menu" aria-label="Navigation menu">
                 <button id="minecraftPageBtn" class="menu-item" type="button">
                   <span aria-hidden="true">🎮</span>
@@ -46,53 +71,68 @@
                 </button>
               </div>
             </div>
-            <button id="logoutBtn" class="logout-btn" type="button">Log out</button>
+            <button id="logoutBtn" class="logout-btn" type="button">
+              Log out
+            </button>
           </div>
         </div>
 
         <div class="workspace-layout">
           <div id="minecraftPage" class="page-panel">
-
-          <div class="terminal-panel minecraft-console-panel">
-            <div class="terminal-header">
-              <div class="terminal-window-controls" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
+            <div class="terminal-panel minecraft-console-panel">
+              <div class="terminal-header">
+                <div class="terminal-window-controls" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span>Minecraft Console</span>
+                <div class="controls">
+                  <button id="startBtn" type="button">Start</button>
+                  <button id="stopBtn" class="danger" type="button">
+                    Stop
+                  </button>
+                  <button id="logsBtn" class="btn-primary" type="button">
+                    Refresh ⟳
+                  </button>
+                </div>
               </div>
-              <span>Minecraft Console</span>
-              <div class="controls">
-                <button id="startBtn" type="button">Start</button>
-                <button id="stopBtn" class="danger" type="button">Stop</button>
-                <button id="logsBtn" class="btn-primary" type="button">Refresh ⟳</button>
-              </div>
+              <pre id="output">Waiting for status...</pre>
+              <form id="consoleForm" class="terminal-form">
+                <span class="terminal-prompt">&gt;</span>
+                <input
+                  id="consoleInput"
+                  type="text"
+                  placeholder="Type a command here"
+                  autocomplete="off"
+                />
+                <button type="submit">Send</button>
+              </form>
             </div>
-            <pre id="output">Waiting for status...</pre>
-            <form id="consoleForm" class="terminal-form">
-              <span class="terminal-prompt">&gt;</span>
-              <input id="consoleInput" type="text" placeholder="Type a command here" autocomplete="off" />
-              <button type="submit">Send</button>
-            </form>
-          </div>
           </div>
 
           <div id="serverPage" class="page-panel hidden">
-          <div class="terminal-panel server-shell-panel">
-            <div class="terminal-header">
-              <div class="terminal-window-controls" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
+            <div class="terminal-panel server-shell-panel">
+              <div class="terminal-header">
+                <div class="terminal-window-controls" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span>Terminal</span>
               </div>
-              <span>Terminal</span>
+              <pre id="serverOutput">Waiting for shell input...</pre>
+              <form id="serverCommandForm" class="terminal-form">
+                <span class="terminal-prompt">$</span>
+                <input
+                  id="serverCommandInput"
+                  type="text"
+                  placeholder="Run a host command..."
+                  autocomplete="off"
+                />
+                <button type="submit">Send</button>
+              </form>
             </div>
-            <pre id="serverOutput">Waiting for shell input...</pre>
-            <form id="serverCommandForm" class="terminal-form">
-              <span class="terminal-prompt">$</span>
-              <input id="serverCommandInput" type="text" placeholder="Run a host command..." autocomplete="off" />
-              <button type="submit">Send</button>
-            </form>
-          </div>
           </div>
 
           <div id="fileManagerPage" class="page-panel hidden">
@@ -102,85 +142,133 @@
                   <span></span>
                   <span></span>
                   <span></span>
-                </div>                
+                </div>
                 <span>File Manager</span>
                 <div class="controls">
-                  <input id="uploadFileInput" type="file" multiple hidden>
-                  <button id="refreshFilesBtn" class="file-refresh-btn" type="button">Refresh ⟳</button>
-                  <button id="uploadFileBtn" class="button" type="button">Upload ⬆</button>
+                  <input id="uploadFileInput" type="file" multiple hidden />
+                  <button
+                    id="refreshFilesBtn"
+                    class="file-refresh-btn"
+                    type="button"
+                  >
+                    Refresh ⟳
+                  </button>
+                  <button id="uploadFileBtn" class="button" type="button">
+                    Upload ⬆
+                  </button>
                 </div>
               </div>
               <div class="file-manager-toolbar">
-                <button id="parentDirectoryBtn" class="file-nav-btn" type="button" style="transform: rotate(90deg);" disabled>↩</button>
-                <div class="file-manager-path" id="fileManagerPath">Loading configured server path...</div>
+                <button
+                  id="parentDirectoryBtn"
+                  class="file-nav-btn"
+                  type="button"
+                  style="transform: rotate(90deg)"
+                  disabled
+                >
+                  ↩
+                </button>
+                <div class="file-manager-path" id="fileManagerPath">
+                  Loading configured server path...
+                </div>
               </div>
-              <div id="fileManagerError" class="file-manager-error hidden"></div>
+              <div
+                id="fileManagerError"
+                class="file-manager-error hidden"
+              ></div>
               <div class="file-list" id="fileList" aria-live="polite">
                 <div class="file-list-empty">Loading files...</div>
               </div>
             </div>
           </div>
-        
-          <div class="terminal-panel status-terminal-panel">
-          <div class="terminal-header">
-            <div class="terminal-window-controls" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <span>Server Usage %</span>
-          </div>
-          <div class="server-status-panel">
-            <div class="stat-card">
-            <div class="stat-label"><span aria-hidden="true">📶</span> Status</div>
-            <div class="stat-value" id="serverStatusValue">N/A</div>
-            </div>
-            <div class="stat-card">
-            <div class="stat-label"><span aria-hidden="true">🏓</span> Ping</div>
-            <div class="stat-value" id="serverPingValue">N/A</div>
-            </div>
-            <div class="stat-card">
-            <div class="stat-label"><span aria-hidden="true">🖥️</span> CPU</div>
-            <div class="stat-value" id="serverCpuValue">N/A</div>
-            </div>
-            <div class="stat-card">
-            <div class="stat-label"><span aria-hidden="true">💾</span> RAM</div>
-            <div class="stat-value" id="serverRamValue">N/A</div>
-            </div>
-            <div class="stat-card">
-            <div class="stat-label"><span aria-hidden="true">📊</span> Disk Usage</div>
-            <div class="stat-value usage-value" id="serverDiskPercent">0%</div>
-            <div id="serverDiskInfo" style="font-size: 0.85rem; color: #9ca3af; margin-top: 4px;">0 GB / 0 GB</div>
-            <div class="usage-bar">
-              <span id="serverDiskBar" style="width: 0%"></span>
-            </div>
-            </div>
-            <div class="stat-card">
-            <div class="stat-label"><span aria-hidden="true">🌐</span> Network</div>
-            <div class="network-graph" aria-label="Network upload and download rates">
-              <div class="network-rate">
-                <div class="network-rate-header">
-                  <span>↓ Downlink</span>
-                  <strong id="serverNetworkDownValue">N/A</strong>
-                </div>
-                <div class="network-bar"><span id="serverNetworkDownBar"></span></div>
-              </div>
-              <div class="network-rate">
-                <div class="network-rate-header">
-                  <span>↑ Uplink</span>
-                  <strong id="serverNetworkUpValue">N/A</strong>
-                </div>
-                <div class="network-bar network-bar-up"><span id="serverNetworkUpBar"></span></div>
-              </div>
-            </div>
-            </div>
-            <div class="stat-card stat-card-wide">
-            <div class="stat-label"><span aria-hidden="true">⏱️</span> Uptime</div>
-            <div class="stat-value" id="serverUptimeValue">N/A</div>
-            </div>
-          </div>
-          </div>
 
+          <div class="terminal-panel status-terminal-panel">
+            <div class="terminal-header">
+              <div class="terminal-window-controls" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span>Server Usage %</span>
+            </div>
+            <div class="server-status-panel">
+              <div class="stat-card">
+                <div class="stat-label">
+                  <span aria-hidden="true">📶</span> Status
+                </div>
+                <div class="stat-value" id="serverStatusValue">N/A</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">
+                  <span aria-hidden="true">🏓</span> Ping
+                </div>
+                <div class="stat-value" id="serverPingValue">N/A</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">
+                  <span aria-hidden="true">🖥️</span> CPU
+                </div>
+                <div class="stat-value" id="serverCpuValue">N/A</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">
+                  <span aria-hidden="true">💾</span> RAM
+                </div>
+                <div class="stat-value" id="serverRamValue">N/A</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">
+                  <span aria-hidden="true">📊</span> Disk Usage
+                </div>
+                <div class="stat-value usage-value" id="serverDiskPercent">
+                  0%
+                </div>
+                <div
+                  id="serverDiskInfo"
+                  style="font-size: 0.85rem; color: #9ca3af; margin-top: 4px"
+                >
+                  0 GB / 0 GB
+                </div>
+                <div class="usage-bar">
+                  <span id="serverDiskBar" style="width: 0%"></span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">
+                  <span aria-hidden="true">🌐</span> Network
+                </div>
+                <div
+                  class="network-graph"
+                  aria-label="Network upload and download rates"
+                >
+                  <div class="network-rate">
+                    <div class="network-rate-header">
+                      <span>↓ Downlink</span>
+                      <strong id="serverNetworkDownValue">N/A</strong>
+                    </div>
+                    <div class="network-bar">
+                      <span id="serverNetworkDownBar"></span>
+                    </div>
+                  </div>
+                  <div class="network-rate">
+                    <div class="network-rate-header">
+                      <span>↑ Uplink</span>
+                      <strong id="serverNetworkUpValue">N/A</strong>
+                    </div>
+                    <div class="network-bar network-bar-up">
+                      <span id="serverNetworkUpBar"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="stat-card stat-card-wide">
+                <div class="stat-label">
+                  <span aria-hidden="true">⏱️</span> Uptime
+                </div>
+                <div class="stat-value" id="serverUptimeValue">N/A</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -188,21 +276,35 @@
         <div class="modal-content">
           <div class="modal-header">
             <h2>Settings</h2>
-            <button id="closeSettingsBtn" class="modal-close" type="button">✕</button>
+            <button id="closeSettingsBtn" class="modal-close" type="button">
+              ✕
+            </button>
           </div>
           <div class="modal-body">
             <form id="settingsForm">
               <fieldset>
                 <legend>Socket Configuration</legend>
-                <legend style="color: white; font-size: 0.7rem;">Some changes need the webmanager to restart to apply changes.</legend>
-                <br>
+                <legend style="color: white; font-size: 0.7rem">
+                  Some changes need the webmanager to restart to apply changes.
+                </legend>
+                <br />
                 <div class="form-group">
                   <label for="socketHost">Host:</label>
-                  <input type="text" id="socketHost" name="socket.host" required />
+                  <input
+                    type="text"
+                    id="socketHost"
+                    name="socket.host"
+                    required
+                  />
                 </div>
                 <div class="form-group">
                   <label for="socketPort">Port:</label>
-                  <input type="number" id="socketPort" name="socket.port" required />
+                  <input
+                    type="number"
+                    id="socketPort"
+                    name="socket.port"
+                    required
+                  />
                 </div>
               </fieldset>
 
@@ -210,15 +312,30 @@
                 <legend>Minecraft Configuration</legend>
                 <div class="form-group">
                   <label for="minecraftScreenName">Screen Name:</label>
-                  <input type="text" id="minecraftScreenName" name="minecraft.screenName" required />
+                  <input
+                    type="text"
+                    id="minecraftScreenName"
+                    name="minecraft.screenName"
+                    required
+                  />
                 </div>
                 <div class="form-group">
                   <label for="minecraftServerPath">Server Path:</label>
-                  <input type="text" id="minecraftServerPath" name="minecraft.serverPath" required />
+                  <input
+                    type="text"
+                    id="minecraftServerPath"
+                    name="minecraft.serverPath"
+                    required
+                  />
                 </div>
                 <div class="form-group">
                   <label for="minecraftWebUrl">Web URL:</label>
-                  <input type="text" id="minecraftWebUrl" name="minecraft.webUrl" required />
+                  <input
+                    type="text"
+                    id="minecraftWebUrl"
+                    name="minecraft.webUrl"
+                    required
+                  />
                 </div>
               </fieldset>
 
@@ -233,13 +350,28 @@
                   <input type="number" id="webPort" name="web.port" required />
                 </div>
                 <div class="form-group">
-                  <label for="refreshIntervalMs">Status update rate (milliseconds):</label>
-                  <input type="number" id="refreshIntervalMs" name="web.refreshIntervalMs" min="100" step="100" required />
+                  <label for="refreshIntervalMs"
+                    >Status update rate (milliseconds):</label
+                  >
+                  <input
+                    type="number"
+                    id="refreshIntervalMs"
+                    name="web.refreshIntervalMs"
+                    min="100"
+                    step="100"
+                    required
+                  />
                 </div>
               </fieldset>
 
               <div class="modal-footer">
-                <button type="button" id="cancelSettingsBtn" class="btn-secondary">Cancel</button>
+                <button
+                  type="button"
+                  id="cancelSettingsBtn"
+                  class="btn-secondary"
+                >
+                  Cancel
+                </button>
                 <button type="submit" class="btn-primary">Save Settings</button>
               </div>
             </form>
@@ -251,15 +383,35 @@
         <div class="modal-content file-editor-modal-content">
           <div class="modal-header">
             <h2 id="fileEditorTitle">Edit File</h2>
-            <button id="closeFileEditorBtn" class="modal-close" type="button">✕</button>
+            <button id="closeFileEditorBtn" class="modal-close" type="button">
+              ✕
+            </button>
           </div>
           <div class="file-editor-body">
             <div id="fileEditorError" class="file-manager-error hidden"></div>
-            <textarea id="fileEditorInput" class="file-editor-input" spellcheck="false" disabled></textarea>
+            <textarea
+              id="fileEditorInput"
+              class="file-editor-input"
+              spellcheck="false"
+              disabled
+            ></textarea>
           </div>
           <div class="modal-footer">
-            <button type="button" id="cancelFileEditorBtn" class="btn-secondary">Cancel</button>
-            <button type="button" id="saveFileEditorBtn" class="btn-primary" disabled>Save File</button>
+            <button
+              type="button"
+              id="cancelFileEditorBtn"
+              class="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              id="saveFileEditorBtn"
+              class="btn-primary"
+              disabled
+            >
+              Save File
+            </button>
           </div>
         </div>
       </div>
@@ -270,9 +422,12 @@
           <span aria-hidden="true">|</span>
           <a href="https://bycrxh.it">Yokvba</a>
         </nav>
-        <small>&copy; 2026 - Closed Source - RemoteManager by Yokvba</small> <br><br>
-        <small>If you find any exploits, issues or problems please report to <a href="mailto:contact@bycrxh.it">contact@bycrxh.it</a>.</small> <br>
-        <small>You will be compensated accordingly.</small> <br>
+        <small>&copy; 2026 - Closed Source - RemoteManager by Yokvba</small>
+        <br /><br />
+        <small>If you find any exploits, issues or problems please report to
+          <a href="mailto:contact@bycrxh.it">contact@bycrxh.it</a>.</small>
+        <br />
+        <small>You will be compensated accordingly.</small> <br />
       </footer>
     </div>
 

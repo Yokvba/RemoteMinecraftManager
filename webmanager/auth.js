@@ -1,16 +1,16 @@
-import { randomUUID } from 'node:crypto';
-import { webConfig } from './config.js';
+import { randomUUID } from "node:crypto";
+import { webConfig } from "./config.js";
 
 const sessionStore = new Map();
 
 export function getSessionId(req) {
-  const cookieHeader = req.headers.cookie || '';
+  const cookieHeader = req.headers.cookie || "";
   const cookie = cookieHeader
-    .split(';')
+    .split(";")
     .map((part) => part.trim())
-    .find((part) => part.startsWith('sessionId='));
+    .find((part) => part.startsWith("sessionId="));
 
-  return cookie ? decodeURIComponent(cookie.slice('sessionId='.length)) : null;
+  return cookie ? decodeURIComponent(cookie.slice("sessionId=".length)) : null;
 }
 
 export function getCurrentUser(req) {
@@ -21,8 +21,10 @@ export function getCurrentUser(req) {
 export function requireAuth(req, res) {
   const user = getCurrentUser(req);
   if (!user) {
-    res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ success: false, message: 'Authentication required.' }));
+    res.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(
+      JSON.stringify({ success: false, message: "Authentication required." }),
+    );
     return null;
   }
 
@@ -44,7 +46,7 @@ export function destroySession(req) {
 
 export function validateLogin(username, password) {
   const user = (webConfig.users || []).find(
-    (entry) => entry.username === username && entry.password === password
+    (entry) => entry.username === username && entry.password === password,
   );
 
   return user ? user.username : null;
