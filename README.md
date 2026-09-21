@@ -8,7 +8,6 @@
 
 ### __✍ TODO:__
 * Add Info Button to files
-* Add Upload Button
 * Add Rate Limit on Login
-* Make discord bot alert when Server goes offline
+* Make discord bot alert when Server goes offline or unusually high server usage.
 * Remove 25Mb Upload Cap
