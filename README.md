@@ -18,10 +18,11 @@
 * RUN THIS AT YOUR OWN RISK.
 
 ### ✍ <ins>TODO:</ins>
-Small:
+<ins>Small:</ins>
 * Remove 25Mb Upload Cap
 * Add Terms and Conditions and Cookies Agree Page.
-Major:
+
+<ins>Major:</ins>
 * Make discord bot alert when Server goes offline or unusually high server usage.
 * Replace server usage in Minecraft page with Minecraft server specific buttons (e.g. Players, Whitelist, Banlist, maybe Backups).
 * Create, delete and manage multiple minecraft server.
