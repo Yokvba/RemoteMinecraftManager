@@ -5,7 +5,7 @@
 * Most inefficient way to do it but ion give af.
 * Remotely manage your Minecraft(Linux) Server without any plugin, only using screen.
 * Also take a look at the README.TXT in the MCServer Dependecies Folder.
-### 
+
 ### __✍ TODO:__
 * Add Info Button to files
 * Add Upload Button
