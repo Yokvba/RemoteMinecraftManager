@@ -5,3 +5,11 @@
 - Remotely manage your Minecraft(Linux) Server without any plugin, only using screen.
 - Also take a look at the README.TXT in the MCServer Dependecies Folder.
  
+### ✍ TODO:
+* Add Info Button to files
+* Add Upload Button
+* Add Rate Limit on Login
+* Make discord bot alert when Server goes offline
+* Remove 25Mb Upload Cap
+* Make Session Secure (https)
+* Check webmanager/server.js because it may not be needed
