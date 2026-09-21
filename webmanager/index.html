@@ -415,7 +415,7 @@
           </div>
         </div>
       </div>
-      
+
       <div id="uploadModal" class="modal hidden">
         <div class="modal-content">
           <div class="modal-header">
@@ -433,6 +433,43 @@
         </div>
       </div>
 
+      <div id="termsModal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Terms and Conditions</h2>
+            <button
+              id="closeTermsBtn"
+              class="modal-close"
+              type="button"
+              style="display: none"
+              disabled
+            >
+              ✕
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>
+              By using the web version of RemoteManager, you accept that you do
+              so at your own risk and for personal use only. This tool grants
+              direct control over the Minecraft server host and its filesystem.
+              The Developer (Yokvba) provides no guarantee of uptime, data
+              integrity, warranty, or security, and is not liable for any
+              damage, data loss, or downtime resulting from its use.
+            </p>
+            <p style="color: grey">
+              You have to accept these Terms and Conditions to continue using this program.
+              You may not use this program without consent. This is a one-time
+              popup and will not show again after accepting.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="acceptTermsBtn" class="btn-primary">
+              Accept
+            </button>
+          </div>
+        </div>
+      </div>
+
       <footer class="site-footer">
         <nav aria-label="Footer links">
           <a href="https://github.com/Yokvba">GitHub</a>
@@ -440,11 +477,12 @@
           <a href="https://bycrxh.it">Yokvba</a>
         </nav>
         <small>&copy; 2026 - Closed Source - RemoteManager by Yokvba</small>
-        <br /><br />
-        <small>If you find any exploits, issues or problems please report to
-          <a href="mailto:contact@bycrxh.it">contact@bycrxh.it</a>.</small>
         <br />
-        <small>You will be compensated accordingly.</small> <br />
+        <small
+          >If you find any exploits, issues or problems please report to
+          <a href="mailto:contact@bycrxh.it">contact@bycrxh.it</a>.</small
+        >
+        <br />
       </footer>
     </div>
 

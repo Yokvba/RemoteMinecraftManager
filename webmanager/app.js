@@ -56,8 +56,11 @@ const settingsBtn = document.getElementById("settingsBtn"),
   uploadFileInput = document.getElementById("uploadFileInput"),
   uploadModal = document.getElementById("uploadModal"),
   closeUploadBtn = document.getElementById("closeUploadBtn"),
-  uploadStatusText = document.getElementById("uploadStatusText"),
+  uploadStatusText = document.getElementById("uploadStatusText"),  
   uploadProgressBar = document.getElementById("uploadProgressBar"),
+  termsModal = document.getElementById("termsModal"),
+  closeTermsBtn = document.getElementById("closeTermsBtn"),
+  acceptTermsBtn = document.getElementById("acceptTermsBtn"),
   parentDirectoryBtn = document.getElementById("parentDirectoryBtn"),
   fileManagerPath = document.getElementById("fileManagerPath"),
   fileManagerError = document.getElementById("fileManagerError"),
@@ -376,6 +379,7 @@ function setAuthenticated(user) {
   appView.classList.toggle("hidden", !isLoggedIn);
   if (isLoggedIn) {
     setOutput(`Logged in as ${user}.\n\nWaiting for live server status...`);
+  if (!hasAcceptedTerms()) openTerms();
   } else {
     setOutput("Please log in to manage the server.");
     setStatus(false);
@@ -393,6 +397,12 @@ async function fetchJson(url, options = {}) {
   if (!response.ok) throw new Error(data.message || "Request failed.");
   return data;
 }
+
+acceptTermsBtn.addEventListener("click", acceptTerms);
+closeTermsBtn.addEventListener("click", closeTerms);
+termsModal.addEventListener("click", (event) => {
+  if (event.target === termsModal) closeTerms();
+});
 
 async function checkSession() {
   try {
@@ -497,11 +507,25 @@ async function loadSettings() {
   }
 }
 
+function hasAcceptedTerms() {
+  return localStorage.getItem("termsAccepted") === "true";
+}
+function openTerms() {
+  termsModal.classList.remove("hidden");
+}
+function closeTerms() {
+  termsModal.classList.add("hidden");
+}
+function acceptTerms() {
+  localStorage.setItem("termsAccepted", "true");
+  closeTerms();
+}
+
+
 function openSettings() {
   loadSettings();
   settingsModal.classList.remove("hidden");
 }
-
 function closeSettings() {
   settingsModal.classList.add("hidden");
 }

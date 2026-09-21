@@ -21,7 +21,7 @@
 
 ### ✍ <ins>TODO:</ins>
 <ins>Small:</ins>
-* Add Terms and Conditions and Cookies Agree Page.
+* /
 
 <ins>Major:</ins>
 * Make discord bot alert when Server goes offline or unusually high server usage.
