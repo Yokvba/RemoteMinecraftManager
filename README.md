@@ -12,5 +12,3 @@
 * Add Rate Limit on Login
 * Make discord bot alert when Server goes offline
 * Remove 25Mb Upload Cap
-* Make Session Secure (https)
-* Check webmanager/server.js because it may not be needed
