@@ -21,7 +21,6 @@
 
 ### ✍ <ins>TODO:</ins>
 <ins>Small:</ins>
-* Remove 25Mb Upload Cap
 * Add Terms and Conditions and Cookies Agree Page.
 
 <ins>Major:</ins>

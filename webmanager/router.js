@@ -35,7 +35,7 @@ const mimeTypes = {
   ".svg": "image/svg+xml",
 };
 
-const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB Upload Limit - Will change soon tho
+const MAX_UPLOAD_BYTES = 500 * 1024 * 1024; // 500 MB Upload Limit - (big enough)
 
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {

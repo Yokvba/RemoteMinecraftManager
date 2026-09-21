@@ -51,9 +51,13 @@ const settingsBtn = document.getElementById("settingsBtn"),
   fileEditorTitle = document.getElementById("fileEditorTitle"),
   fileEditorInput = document.getElementById("fileEditorInput"),
   fileEditorError = document.getElementById("fileEditorError"),
-  refreshFilesBtn = document.getElementById("refreshFilesBtn"),
+  refreshFilesBtn = document.getElementById("refreshFilesBtn"),  
   uploadFileBtn = document.getElementById("uploadFileBtn"),
   uploadFileInput = document.getElementById("uploadFileInput"),
+  uploadModal = document.getElementById("uploadModal"),
+  closeUploadBtn = document.getElementById("closeUploadBtn"),
+  uploadStatusText = document.getElementById("uploadStatusText"),
+  uploadProgressBar = document.getElementById("uploadProgressBar"),
   parentDirectoryBtn = document.getElementById("parentDirectoryBtn"),
   fileManagerPath = document.getElementById("fileManagerPath"),
   fileManagerError = document.getElementById("fileManagerError"),
@@ -309,25 +313,56 @@ function readFileAsBase64(file) {
   });
 }
 
+function uploadFileWithProgress(file, content, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/files/upload");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable) onProgress(event.loaded / event.total);
+    });
+    xhr.addEventListener("load", () => {
+      let data = {};
+      try {
+        data = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+      } catch {
+        /* ignore parse errors, fall through to status check */
+      }
+      if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+      else reject(new Error(data.message || "Upload failed."));
+    });
+    xhr.addEventListener("error", () =>
+      reject(new Error("Upload failed due to a network error.")),
+    );
+    xhr.send(
+      JSON.stringify({ path: currentFilesPath, name: file.name, content }),
+    );
+  });
+}
+
 async function uploadFiles(files) {
   if (!files.length) return;
   fileManagerError.classList.add("hidden");
   uploadFileBtn.disabled = true;
+  uploadModal.classList.remove("hidden");
 
   try {
-    for (const file of files) {
+    for (let i = 0; i < files.length; i += 1) {
+      const file = files[i];
+      uploadProgressBar.style.width = "0%";
+      uploadStatusText.textContent = `Uploading ${file.name} (${i + 1}/${files.length}) — 0%`;
+
       const content = await readFileAsBase64(file);
-      await fetchJson("/api/files/upload", {
-        method: "POST",
-        body: JSON.stringify({
-          path: currentFilesPath,
-          name: file.name,
-          content,
-        }),
+      await uploadFileWithProgress(file, content, (fraction) => {
+        const percent = Math.round(fraction * 100);
+        uploadProgressBar.style.width = `${percent}%`;
+        uploadStatusText.textContent = `Uploading ${file.name} (${i + 1}/${files.length}) — ${percent}%`;
       });
     }
+    uploadStatusText.textContent = `Upload complete: ${files.length} file${files.length > 1 ? "s" : ""} uploaded.`;
     await loadFiles();
   } catch (error) {
+    uploadModal.classList.add("hidden");
     fileManagerError.textContent = error.message;
     fileManagerError.classList.remove("hidden");
   } finally {
@@ -540,6 +575,12 @@ uploadFileInput.addEventListener("change", () => {
   const files = Array.from(uploadFileInput.files || []);
   uploadFileInput.value = "";
   uploadFiles(files);
+});
+closeUploadBtn.addEventListener("click", () =>
+  uploadModal.classList.add("hidden"),
+);
+uploadModal.addEventListener("click", (event) => {
+  if (event.target === uploadModal) uploadModal.classList.add("hidden");
 });
 closeFileEditorBtn.addEventListener("click", closeFileEditor);
 cancelFileEditorBtn.addEventListener("click", closeFileEditor);
