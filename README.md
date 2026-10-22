@@ -21,7 +21,7 @@
 
 ### ✍ <ins>TODO:</ins>
 <ins>Small:</ins>
-* /
+* (Not Sure tho, could be it's own project) Public file sharing service - with link to share and download from
 
 <ins>Major:</ins>
 * Make discord bot alert when Server goes offline or unusually high server usage.
